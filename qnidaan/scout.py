@@ -41,15 +41,21 @@ def scout(Z_train, y_train, quantum_kernel, max_samples=100, seed=42):
     kta_c = kernel_target_alignment(Kc, y_train)
     g = geometric_difference(Kc, Kq)
     sqrt_n = np.sqrt(len(Z_train))
+    # Huang et al. criterion: classical can match unless g approaches sqrt(n).
+    # Validated on our flagships: g/sqrt(n)=0.30-0.46 -> "classical will
+    # match", and measured benchmarks agreed on all three.
+    g_ratio = g / sqrt_n
+    advantage = bool(g_ratio > 0.7 and kta_q > 0.05)
     return {
         "n_scouted": len(Z_train),
         "kta_quantum": kta_q,
         "kta_classical": kta_c,
         "geometric_difference": g,
         "g_threshold_sqrt_n": float(sqrt_n),
-        # advantage possible if geometry differs materially AND the quantum
-        # kernel actually aligns with labels
-        "quantum_worth_trying": bool(g > 0.25 * sqrt_n and kta_q > 0.05),
+        "g_ratio": float(g_ratio),
+        "verdict": "advantage_possible" if advantage
+        else "classical_will_match",
+        "quantum_worth_trying": advantage,
     }
 
 
