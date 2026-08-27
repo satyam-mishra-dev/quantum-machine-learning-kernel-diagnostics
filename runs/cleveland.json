@@ -1,0 +1,166 @@
+{
+  "dataset": {
+    "name": "cleveland",
+    "title": "Cleveland Heart Disease (UCI)",
+    "n_features": 13,
+    "feature_names": [
+      "age",
+      "sex",
+      "cp",
+      "trestbps",
+      "chol",
+      "fbs",
+      "restecg",
+      "thalach",
+      "exang",
+      "oldpeak",
+      "slope",
+      "ca",
+      "thal"
+    ],
+    "n_train": 237,
+    "n_test": 60,
+    "prevalence": 0.4612794612794613
+  },
+  "budget": {
+    "n_qubits": 4,
+    "method": "pca",
+    "explained_variance": 0.5609732923587706
+  },
+  "scout": {
+    "n_scouted": 100,
+    "kta_quantum": 0.18241549072372212,
+    "kta_classical": 0.14387212870609375,
+    "g_asym": 4.5018822091327495,
+    "g_huang_naive_reg": 4.586001158510281,
+    "g_threshold_sqrt_n": 10.0,
+    "g_ratio": 0.45018822091327493,
+    "verdict": "classical_will_match",
+    "quantum_worth_trying": false
+  },
+  "qsvm_config": {
+    "tuned": true,
+    "C": 1,
+    "reps": 1
+  },
+  "heldout": {
+    "logreg": {
+      "auroc": 0.9609375,
+      "accuracy": 0.8833333333333333,
+      "spec_at_95sens": 0.75,
+      "train_seconds": 0.0,
+      "conformal_qhat": 0.7620445795252218
+    },
+    "svm_rbf": {
+      "auroc": 0.9575892857142857,
+      "accuracy": 0.9,
+      "spec_at_95sens": 0.65625,
+      "train_seconds": 0.01,
+      "conformal_qhat": 0.8025781374860735
+    },
+    "random_forest": {
+      "auroc": 0.9436383928571428,
+      "accuracy": 0.8833333333333333,
+      "spec_at_95sens": 0.625,
+      "train_seconds": 0.14,
+      "conformal_qhat": 0.8633333333333333
+    },
+    "qsvm": {
+      "auroc": 0.9553571428571428,
+      "accuracy": 0.85,
+      "spec_at_95sens": 0.6875,
+      "train_seconds": 14.72,
+      "conformal_qhat": 0.8574835056761911
+    },
+    "vqc": {
+      "auroc": 0.9564732142857143,
+      "accuracy": 0.8666666666666667,
+      "spec_at_95sens": 0.75,
+      "train_seconds": 17.3,
+      "conformal_qhat": 0.6885216494069958
+    },
+    "logreg_full": {
+      "auroc": 0.9497767857142857,
+      "accuracy": 0.8333333333333334,
+      "spec_at_95sens": 0.8125,
+      "train_seconds": 0.0,
+      "full_features": true
+    },
+    "svm_rbf_full": {
+      "auroc": 0.9553571428571429,
+      "accuracy": 0.8333333333333334,
+      "spec_at_95sens": 0.78125,
+      "train_seconds": 0.01,
+      "full_features": true
+    },
+    "random_forest_full": {
+      "auroc": 0.9430803571428571,
+      "accuracy": 0.8666666666666667,
+      "spec_at_95sens": 0.75,
+      "train_seconds": 0.14,
+      "full_features": true
+    }
+  },
+  "sample_efficiency": [
+    {
+      "n_train": 30,
+      "qsvm": {
+        "auroc_mean": 0.9158482142857143,
+        "auroc_std": 0.02577376012106231
+      },
+      "logreg": {
+        "auroc_mean": 0.9276785714285716,
+        "auroc_std": 0.018897564521233482
+      },
+      "svm_rbf": {
+        "auroc_mean": 0.9354910714285716,
+        "auroc_std": 0.01618111133878519
+      }
+    },
+    {
+      "n_train": 60,
+      "qsvm": {
+        "auroc_mean": 0.9276785714285716,
+        "auroc_std": 0.019305132420035384
+      },
+      "logreg": {
+        "auroc_mean": 0.9337053571428571,
+        "auroc_std": 0.026181332531987542
+      },
+      "svm_rbf": {
+        "auroc_mean": 0.9303571428571429,
+        "auroc_std": 0.03075379324226961
+      }
+    },
+    {
+      "n_train": 100,
+      "qsvm": {
+        "auroc_mean": 0.9087053571428572,
+        "auroc_std": 0.02853522050015292
+      },
+      "logreg": {
+        "auroc_mean": 0.9323660714285713,
+        "auroc_std": 0.014797945574970717
+      },
+      "svm_rbf": {
+        "auroc_mean": 0.9299107142857143,
+        "auroc_std": 0.023628051916576798
+      }
+    },
+    {
+      "n_train": 200,
+      "qsvm": {
+        "auroc_mean": 0.9450892857142857,
+        "auroc_std": 0.016804196464388736
+      },
+      "logreg": {
+        "auroc_mean": 0.9482142857142858,
+        "auroc_std": 0.015089681947460356
+      },
+      "svm_rbf": {
+        "auroc_mean": 0.9522321428571429,
+        "auroc_std": 0.012312245866537116
+      }
+    }
+  ]
+}

@@ -1,0 +1,157 @@
+{
+  "dataset": {
+    "name": "quantum_synth",
+    "title": "Quantum-Native Synthetic (Huang et al. relabeling)",
+    "n_features": 4,
+    "feature_names": [
+      "x0",
+      "x1",
+      "x2",
+      "x3"
+    ],
+    "n_train": 240,
+    "n_test": 60,
+    "prevalence": 0.5
+  },
+  "budget": {
+    "n_qubits": 4,
+    "method": "scale",
+    "explained_variance": null
+  },
+  "scout": {
+    "n_scouted": 100,
+    "kta_quantum": 0.12631427070962428,
+    "kta_classical": 0.05179695545094792,
+    "g_asym": 25.104910689967944,
+    "g_huang_naive_reg": 5.233360530787353,
+    "g_threshold_sqrt_n": 10.0,
+    "g_ratio": 2.5104910689967945,
+    "verdict": "advantage_possible",
+    "quantum_worth_trying": true
+  },
+  "qsvm_config": {
+    "tuned": true,
+    "C": 1,
+    "reps": 2
+  },
+  "heldout": {
+    "logreg": {
+      "auroc": 0.4599999999999999,
+      "accuracy": 0.5333333333333333,
+      "spec_at_95sens": 0.0,
+      "train_seconds": 0.0,
+      "conformal_qhat": 0.7160309746382105
+    },
+    "svm_rbf": {
+      "auroc": 0.7044444444444444,
+      "accuracy": 0.6666666666666666,
+      "spec_at_95sens": 0.16666666666666663,
+      "train_seconds": 0.01,
+      "conformal_qhat": 0.7297297313505625
+    },
+    "random_forest": {
+      "auroc": 0.7433333333333334,
+      "accuracy": 0.6333333333333333,
+      "spec_at_95sens": 0.30000000000000004,
+      "train_seconds": 0.15,
+      "conformal_qhat": 0.7133333333333334
+    },
+    "qsvm": {
+      "auroc": 0.9722222222222222,
+      "accuracy": 0.9,
+      "spec_at_95sens": 0.7666666666666666,
+      "train_seconds": 20.88,
+      "conformal_qhat": 0.4620535288940901
+    },
+    "vqc": {
+      "auroc": 0.6877777777777778,
+      "accuracy": 0.6166666666666667,
+      "spec_at_95sens": 0.16666666666666663,
+      "train_seconds": 17.24,
+      "conformal_qhat": 0.695178908683341
+    },
+    "logreg_full": {
+      "auroc": 0.4488888888888889,
+      "accuracy": 0.5333333333333333,
+      "spec_at_95sens": 0.0,
+      "train_seconds": 0.0,
+      "full_features": true
+    },
+    "svm_rbf_full": {
+      "auroc": 0.6933333333333332,
+      "accuracy": 0.6,
+      "spec_at_95sens": 0.1333333333333333,
+      "train_seconds": 0.01,
+      "full_features": true
+    },
+    "random_forest_full": {
+      "auroc": 0.7655555555555555,
+      "accuracy": 0.7,
+      "spec_at_95sens": 0.4,
+      "train_seconds": 0.15,
+      "full_features": true
+    }
+  },
+  "sample_efficiency": [
+    {
+      "n_train": 30,
+      "qsvm": {
+        "auroc_mean": 0.8258888888888889,
+        "auroc_std": 0.07300811725544759
+      },
+      "logreg": {
+        "auroc_mean": 0.3793333333333334,
+        "auroc_std": 0.17091005503942783
+      },
+      "svm_rbf": {
+        "auroc_mean": 0.5488888888888889,
+        "auroc_std": 0.12000000000000002
+      }
+    },
+    {
+      "n_train": 60,
+      "qsvm": {
+        "auroc_mean": 0.8887777777777778,
+        "auroc_std": 0.034775292775968414
+      },
+      "logreg": {
+        "auroc_mean": 0.5224444444444444,
+        "auroc_std": 0.10836438301477494
+      },
+      "svm_rbf": {
+        "auroc_mean": 0.6571111111111112,
+        "auroc_std": 0.061154530030161136
+      }
+    },
+    {
+      "n_train": 100,
+      "qsvm": {
+        "auroc_mean": 0.9444444444444444,
+        "auroc_std": 0.03830514261319604
+      },
+      "logreg": {
+        "auroc_mean": 0.5153333333333333,
+        "auroc_std": 0.07946347868325705
+      },
+      "svm_rbf": {
+        "auroc_mean": 0.6808888888888889,
+        "auroc_std": 0.0477674407422224
+      }
+    },
+    {
+      "n_train": 200,
+      "qsvm": {
+        "auroc_mean": 0.9602222222222222,
+        "auroc_std": 0.009375565826546244
+      },
+      "logreg": {
+        "auroc_mean": 0.4344444444444445,
+        "auroc_std": 0.03405696027554242
+      },
+      "svm_rbf": {
+        "auroc_mean": 0.6777777777777778,
+        "auroc_std": 0.013540064007726588
+      }
+    }
+  ]
+}

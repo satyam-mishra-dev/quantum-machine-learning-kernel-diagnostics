@@ -1,0 +1,161 @@
+{
+  "dataset": {
+    "name": "pima",
+    "title": "Pima Indians Diabetes",
+    "n_features": 8,
+    "feature_names": [
+      "pregnancies",
+      "glucose",
+      "bp",
+      "skin",
+      "insulin",
+      "bmi",
+      "pedigree",
+      "age"
+    ],
+    "n_train": 614,
+    "n_test": 154,
+    "prevalence": 0.3489583333333333
+  },
+  "budget": {
+    "n_qubits": 4,
+    "method": "pca",
+    "explained_variance": 0.719694475315118
+  },
+  "scout": {
+    "n_scouted": 100,
+    "kta_quantum": 0.10295906345270721,
+    "kta_classical": 0.07326767441343812,
+    "g_asym": 3.0890657588618247,
+    "g_huang_naive_reg": 4.984974797303202,
+    "g_threshold_sqrt_n": 10.0,
+    "g_ratio": 0.3089065758861825,
+    "verdict": "classical_will_match",
+    "quantum_worth_trying": false
+  },
+  "qsvm_config": {
+    "tuned": true,
+    "C": 1,
+    "reps": 1
+  },
+  "heldout": {
+    "logreg": {
+      "auroc": 0.732037037037037,
+      "accuracy": 0.6883116883116883,
+      "spec_at_95sens": 0.28,
+      "train_seconds": 0.0,
+      "conformal_qhat": 0.661537380015748
+    },
+    "svm_rbf": {
+      "auroc": 0.7246296296296296,
+      "accuracy": 0.6948051948051948,
+      "spec_at_95sens": 0.22999999999999998,
+      "train_seconds": 0.01,
+      "conformal_qhat": 0.6951851125790494
+    },
+    "random_forest": {
+      "auroc": 0.7209259259259261,
+      "accuracy": 0.6948051948051948,
+      "spec_at_95sens": 0.18999999999999995,
+      "train_seconds": 0.2,
+      "conformal_qhat": 0.7233333333333334
+    },
+    "qsvm": {
+      "auroc": 0.72,
+      "accuracy": 0.6818181818181818,
+      "spec_at_95sens": 0.14,
+      "train_seconds": 98.16,
+      "conformal_qhat": 0.7588451261197818
+    },
+    "vqc": {
+      "auroc": 0.742962962962963,
+      "accuracy": 0.7142857142857143,
+      "spec_at_95sens": 0.31999999999999995,
+      "train_seconds": 45.7,
+      "conformal_qhat": 0.5925842554691685
+    },
+    "logreg_full": {
+      "auroc": 0.8229629629629629,
+      "accuracy": 0.7142857142857143,
+      "spec_at_95sens": 0.55,
+      "train_seconds": 0.0,
+      "full_features": true
+    },
+    "svm_rbf_full": {
+      "auroc": 0.7892592592592592,
+      "accuracy": 0.7532467532467533,
+      "spec_at_95sens": 0.30000000000000004,
+      "train_seconds": 0.02,
+      "full_features": true
+    },
+    "random_forest_full": {
+      "auroc": 0.8129629629629629,
+      "accuracy": 0.7597402597402597,
+      "spec_at_95sens": 0.35,
+      "train_seconds": 0.19,
+      "full_features": true
+    }
+  },
+  "sample_efficiency": [
+    {
+      "n_train": 30,
+      "qsvm": {
+        "auroc_mean": 0.5694444444444444,
+        "auroc_std": 0.20409688485809663
+      },
+      "logreg": {
+        "auroc_mean": 0.7227777777777777,
+        "auroc_std": 0.08093111687733179
+      },
+      "svm_rbf": {
+        "auroc_mean": 0.7014074074074075,
+        "auroc_std": 0.01850026878535321
+      }
+    },
+    {
+      "n_train": 60,
+      "qsvm": {
+        "auroc_mean": 0.6974444444444444,
+        "auroc_std": 0.03489510049288839
+      },
+      "logreg": {
+        "auroc_mean": 0.752962962962963,
+        "auroc_std": 0.030877373730691535
+      },
+      "svm_rbf": {
+        "auroc_mean": 0.7123703703703703,
+        "auroc_std": 0.043524901029206184
+      }
+    },
+    {
+      "n_train": 100,
+      "qsvm": {
+        "auroc_mean": 0.6940555555555556,
+        "auroc_std": 0.03501055592336546
+      },
+      "logreg": {
+        "auroc_mean": 0.7448888888888889,
+        "auroc_std": 0.030376749555873262
+      },
+      "svm_rbf": {
+        "auroc_mean": 0.6947777777777777,
+        "auroc_std": 0.02948965780906037
+      }
+    },
+    {
+      "n_train": 200,
+      "qsvm": {
+        "auroc_mean": 0.7163333333333333,
+        "auroc_std": 0.020445316674898902
+      },
+      "logreg": {
+        "auroc_mean": 0.7507777777777778,
+        "auroc_std": 0.01857325244665528
+      },
+      "svm_rbf": {
+        "auroc_mean": 0.7311851851851852,
+        "auroc_std": 0.01631291240432288
+      }
+    }
+  ]
+}

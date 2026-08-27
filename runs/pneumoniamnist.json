@@ -1,0 +1,34 @@
+{
+  "dataset": {
+    "name": "pneumoniamnist",
+    "title": "PneumoniaMNIST chest X-rays (MedMNIST v2)",
+    "n_features": 784,
+    "feature_names": []
+  },
+  "budget": {
+    "n_qubits": 4,
+    "method": "cnn_trunk",
+    "explained_variance": null
+  },
+  "heldout": {
+    "cnn_classical": {
+      "auroc": 0.9249726057418365,
+      "accuracy": 0.8653846153846154,
+      "sensitivity": 0.9076923076923077,
+      "specificity": 0.7948717948717948,
+      "threshold_from_train": 1.0136,
+      "train_seconds": 5.7,
+      "n_test": 624
+    },
+    "hybrid_qnn": {
+      "auroc": 0.9385163269778655,
+      "accuracy": 0.8701923076923077,
+      "sensitivity": 0.9461538461538461,
+      "specificity": 0.7435897435897436,
+      "threshold_from_train": 0.8926,
+      "train_seconds": 7.9,
+      "n_test": 624
+    }
+  },
+  "image_track": true
+}

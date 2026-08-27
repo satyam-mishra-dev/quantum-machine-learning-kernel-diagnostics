@@ -1,0 +1,183 @@
+{
+  "dataset": {
+    "name": "wdbc",
+    "title": "Breast Cancer Wisconsin (Diagnostic)",
+    "n_features": 30,
+    "feature_names": [
+      "mean radius",
+      "mean texture",
+      "mean perimeter",
+      "mean area",
+      "mean smoothness",
+      "mean compactness",
+      "mean concavity",
+      "mean concave points",
+      "mean symmetry",
+      "mean fractal dimension",
+      "radius error",
+      "texture error",
+      "perimeter error",
+      "area error",
+      "smoothness error",
+      "compactness error",
+      "concavity error",
+      "concave points error",
+      "symmetry error",
+      "fractal dimension error",
+      "worst radius",
+      "worst texture",
+      "worst perimeter",
+      "worst area",
+      "worst smoothness",
+      "worst compactness",
+      "worst concavity",
+      "worst concave points",
+      "worst symmetry",
+      "worst fractal dimension"
+    ],
+    "n_train": 455,
+    "n_test": 114,
+    "prevalence": 0.37258347978910367
+  },
+  "budget": {
+    "n_qubits": 4,
+    "method": "pca",
+    "explained_variance": 0.7984862154498065
+  },
+  "scout": {
+    "n_scouted": 100,
+    "kta_quantum": 0.15693196329917863,
+    "kta_classical": 0.11904542986176506,
+    "g_asym": 2.9645220978610634,
+    "g_huang_naive_reg": 4.136579239240208,
+    "g_threshold_sqrt_n": 10.0,
+    "g_ratio": 0.2964522097861063,
+    "verdict": "classical_will_match",
+    "quantum_worth_trying": false
+  },
+  "qsvm_config": {
+    "tuned": true,
+    "C": 1,
+    "reps": 1
+  },
+  "heldout": {
+    "logreg": {
+      "auroc": 0.9957010582010583,
+      "accuracy": 0.9649122807017544,
+      "spec_at_95sens": 0.9722222222222222,
+      "train_seconds": 0.0,
+      "conformal_qhat": 0.32618451804315485
+    },
+    "svm_rbf": {
+      "auroc": 0.996031746031746,
+      "accuracy": 0.956140350877193,
+      "spec_at_95sens": 0.9861111111111112,
+      "train_seconds": 0.01,
+      "conformal_qhat": 0.2667221254336559
+    },
+    "random_forest": {
+      "auroc": 0.9945436507936508,
+      "accuracy": 0.9473684210526315,
+      "spec_at_95sens": 0.9722222222222222,
+      "train_seconds": 0.16,
+      "conformal_qhat": 0.33333333333333337
+    },
+    "qsvm": {
+      "auroc": 0.9950396825396826,
+      "accuracy": 0.9649122807017544,
+      "spec_at_95sens": 0.9861111111111112,
+      "train_seconds": 56.03,
+      "conformal_qhat": 0.148437348909917
+    },
+    "vqc": {
+      "auroc": 0.9897486772486773,
+      "accuracy": 0.8947368421052632,
+      "spec_at_95sens": 0.9444444444444444,
+      "train_seconds": 33.26,
+      "conformal_qhat": 0.5133434729578172
+    },
+    "logreg_full": {
+      "auroc": 0.996031746031746,
+      "accuracy": 0.9649122807017544,
+      "spec_at_95sens": 0.9861111111111112,
+      "train_seconds": 0.01,
+      "full_features": true
+    },
+    "svm_rbf_full": {
+      "auroc": 0.9943783068783069,
+      "accuracy": 0.9736842105263158,
+      "spec_at_95sens": 0.9861111111111112,
+      "train_seconds": 0.01,
+      "full_features": true
+    },
+    "random_forest_full": {
+      "auroc": 0.9943783068783069,
+      "accuracy": 0.9736842105263158,
+      "spec_at_95sens": 0.9722222222222222,
+      "train_seconds": 0.21,
+      "full_features": true
+    }
+  },
+  "sample_efficiency": [
+    {
+      "n_train": 30,
+      "qsvm": {
+        "auroc_mean": 0.9589285714285716,
+        "auroc_std": 0.013347668555665252
+      },
+      "logreg": {
+        "auroc_mean": 0.9917989417989418,
+        "auroc_std": 0.005729590150942748
+      },
+      "svm_rbf": {
+        "auroc_mean": 0.9775132275132276,
+        "auroc_std": 0.01993200154222178
+      }
+    },
+    {
+      "n_train": 60,
+      "qsvm": {
+        "auroc_mean": 0.9635582010582009,
+        "auroc_std": 0.022263667181649165
+      },
+      "logreg": {
+        "auroc_mean": 0.996494708994709,
+        "auroc_std": 0.0022862944467518295
+      },
+      "svm_rbf": {
+        "auroc_mean": 0.9884259259259259,
+        "auroc_std": 0.004215459253962294
+      }
+    },
+    {
+      "n_train": 100,
+      "qsvm": {
+        "auroc_mean": 0.9781746031746031,
+        "auroc_std": 0.01312168312104924
+      },
+      "logreg": {
+        "auroc_mean": 0.9959656084656086,
+        "auroc_std": 0.0027208997924238467
+      },
+      "svm_rbf": {
+        "auroc_mean": 0.9882936507936508,
+        "auroc_std": 0.006250787302390214
+      }
+    },
+    {
+      "n_train": 200,
+      "qsvm": {
+        "auroc_mean": 0.9906084656084655,
+        "auroc_std": 0.002682447062258353
+      },
+      "logreg": {
+        "auroc_mean": 0.9968253968253966,
+        "auroc_std": 0.0011359500024680801
+      },
+      "svm_rbf": {
+        "auroc_mean": 0.994973544973545,
+        "auroc_std": 0.0015226011155055031
+      }
+    }
+  ]
+}

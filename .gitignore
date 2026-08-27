@@ -21,5 +21,4 @@ dist/
 
 # artifacts
 models/
-runs/
 .DS_Store
