@@ -67,7 +67,9 @@ export type Prediction = {
 
 export type Verdict = {
   best_model: string;
+  best_quantum?: string;
   quantum_won: boolean;
+  quantum_vs_best_classical?: number;
   qsvm_vs_best_classical: number;
 };
 
@@ -133,6 +135,8 @@ export const MODEL_LABELS: Record<string, string> = {
   svm_rbf: 'SVM (RBF)',
   random_forest: 'Random Forest',
   qsvm: 'QSVM',
+  pqk: 'PQK (projected kernel)',
+  'ensemble_q+c': 'Quantum+classical ensemble',
   vqc: 'VQC',
   logreg_full: 'LogReg (full features)',
   svm_rbf_full: 'SVM RBF (full features)',
@@ -141,6 +145,7 @@ export const MODEL_LABELS: Record<string, string> = {
   hybrid_qnn: 'Hybrid QNN',
 };
 
-export const isQuantum = (m: string): boolean => m === 'qsvm' || m === 'vqc' || m === 'hybrid_qnn';
+export const isQuantum = (m: string): boolean =>
+  m === 'qsvm' || m === 'pqk' || m === 'vqc' || m === 'hybrid_qnn';
 export const isFullFloor = (m: string, e?: ModelEval): boolean =>
   e?.full_features === true || m.endsWith('_full');

@@ -167,15 +167,15 @@ def _run_adapter(X, y, meta, budget, job):
 
     from qnidaan.budgeter import fit_budget
     from qnidaan.classical import evaluate, make_twins
-    from qnidaan.quantum import QSVM, make_kernel
+    from qnidaan.quantum import PQK, QSVM, make_kernel
     from qnidaan.scout import scout
 
     Xtr, Xte, ytr, yte = train_test_split(X, y, test_size=0.2,
                                           random_state=42, stratify=y)
-    capped = len(Xtr) > 400  # quantum kernel is O(n^2) simulated circuits
+    capped = len(Xtr) > 600  # QSVM kernel is O(n^2) simulated circuits
     if capped:
         rng = np.random.default_rng(42)
-        idx = rng.permutation(len(Xtr))[:400]
+        idx = rng.permutation(len(Xtr))[:600]
         Xtr, ytr = Xtr[idx], ytr[idx]
     job["stage"] = "qubit_budget"
     plan = fit_budget(Xtr, budget=budget)
@@ -190,20 +190,27 @@ def _run_adapter(X, y, meta, budget, job):
         "train_rows_used": int(len(ytr)),
         "train_rows_capped": capped,
     }
-    models = {**make_twins(), "qsvm": QSVM(n_qubits=plan.n_qubits, C=10)}
+    models = {**make_twins(), "qsvm": QSVM(n_qubits=plan.n_qubits, C=10),
+              "pqk": PQK(n_qubits=plan.n_qubits)}
     for mname, m in models.items():
         job["stage"] = f"training:{mname}"
         m.fit(Ztr, ytr)
         out["heldout"][mname] = evaluate(m, Zte, yte)
     job["stage"] = "verdict"
-    best = max(out["heldout"], key=lambda m: out["heldout"][m]["auroc"])
+    quantum = {"qsvm", "pqk"}
+    auroc = {m: e["auroc"] for m, e in out["heldout"].items()}
+    best = max(auroc, key=auroc.get)
+    best_quantum = max(quantum, key=auroc.get)
+    best_classical_auroc = max(v for m, v in auroc.items() if m not in quantum)
     out["verdict"] = {
         "best_model": best,
-        "quantum_won": best == "qsvm",
+        "best_quantum": best_quantum,
+        "quantum_won": best in quantum,
+        "quantum_vs_best_classical": round(
+            auroc[best_quantum] - best_classical_auroc, 4),
+        # backward compat with the frontend
         "qsvm_vs_best_classical": round(
-            out["heldout"]["qsvm"]["auroc"]
-            - max(v["auroc"] for k, v in out["heldout"].items()
-                  if k != "qsvm"), 4),
+            auroc["qsvm"] - best_classical_auroc, 4),
     }
     return out
 
