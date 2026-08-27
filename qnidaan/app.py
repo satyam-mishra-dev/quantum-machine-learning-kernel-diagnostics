@@ -42,6 +42,8 @@ def datasets():
     out = []
     for f in sorted(RUNS_DIR.glob("*.json")):
         r = json.loads(f.read_text())
+        if "heldout" not in r:  # tuned.json, hardware_*.json live here too
+            continue
         best = max(r["heldout"], key=lambda m: r["heldout"][m]["auroc"])
         out.append({
             "name": r["dataset"]["name"],
