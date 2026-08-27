@@ -32,17 +32,18 @@ def _fit_eval(model, Ztr, ytr, Zte, yte):
     return out
 
 
-def sample_efficiency(Ztr, ytr, Zte, yte, n_qubits):
+def sample_efficiency(Ztr, ytr, Zte, yte, n_qubits, qsvm_kw=None):
     """Accuracy/AUROC vs training-set size: QSVM vs classical twins."""
     from sklearn.linear_model import LogisticRegression
     from sklearn.svm import SVC
 
+    qsvm_kw = qsvm_kw or {"C": 10, "reps": 1}
     rng = np.random.default_rng(SEED)
     curve = []
     for size in [s for s in CURVE_SIZES if s <= len(ytr)]:
         point = {"n_train": size}
         for name, make in {
-            "qsvm": lambda: QSVM(n_qubits=n_qubits, C=10),
+            "qsvm": lambda: QSVM(n_qubits=n_qubits, **qsvm_kw),
             "logreg": lambda: LogisticRegression(max_iter=2000),
             "svm_rbf": lambda: SVC(kernel="rbf"),
         }.items():
@@ -144,7 +145,7 @@ def run_dataset(name, budget=8, curves=True):
 
     if curves:
         result["sample_efficiency"] = sample_efficiency(
-            Ztr, ytr, Zte, yte, plan.n_qubits
+            Ztr, ytr, Zte, yte, plan.n_qubits, qsvm_kw
         )
 
     import joblib
