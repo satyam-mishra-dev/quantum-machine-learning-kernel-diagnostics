@@ -1,0 +1,121 @@
+/* Fonts — bundled via @fontsource (no CDN). Only the weights the UI uses. */
+@import '@fontsource/ibm-plex-sans/400.css';
+@import '@fontsource/ibm-plex-sans/500.css';
+@import '@fontsource/ibm-plex-sans/600.css';
+@import '@fontsource/source-serif-4/400.css';
+@import '@fontsource/source-serif-4/600.css';
+@import '@fontsource/ibm-plex-mono/400.css';
+@import '@fontsource/ibm-plex-mono/500.css';
+
+@import 'tailwindcss';
+
+/* Design tokens — inherited from the Tally/Reckon design system, plus ONE
+   quantum accent (violet→teal) reserved for quantum elements. */
+@theme {
+  --color-paper: #fbfaf7; /* background — warm white */
+  --color-ink: #17181a; /* primary text */
+  --color-rule: #e4e1da; /* hairlines, borders */
+  --color-debit: #b3232e; /* carmine — failure, high risk */
+  --color-credit: #1e6b4f; /* ledger green — success, low risk */
+  --color-action: #1f4fd8; /* interactive blue — buttons, links, focus */
+  --color-hold: #8a6d1f; /* pending / processing amber-olive */
+
+  /* Quantum accent — the one new hue. Violet anchor, teal gradient end. */
+  --color-quantum: #6d28d9;
+  --color-quantum-2: #0f766e;
+
+  --color-ink-60: color-mix(in srgb, #17181a 60%, transparent);
+  --color-ink-45: color-mix(in srgb, #17181a 45%, transparent);
+  --color-wash: color-mix(in srgb, #17181a 3%, transparent);
+  --color-debit-wash: color-mix(in srgb, #b3232e 8%, transparent);
+  --color-credit-wash: color-mix(in srgb, #1e6b4f 8%, transparent);
+  --color-action-wash: color-mix(in srgb, #1f4fd8 8%, transparent);
+  --color-hold-wash: color-mix(in srgb, #8a6d1f 12%, transparent);
+  --color-quantum-wash: color-mix(in srgb, #6d28d9 8%, transparent);
+
+  --font-sans: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-serif: 'Source Serif 4', ui-serif, Georgia, serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', monospace;
+
+  --radius-sm: 4px;
+  --radius-md: 4px;
+  --radius-lg: 4px;
+}
+
+@layer base {
+  html {
+    background: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  body {
+    min-height: 100dvh;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-action);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+  ::selection {
+    background: var(--color-quantum-wash);
+  }
+  .tnum {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@layer components {
+  /* Flat card: 1px rule border, NO shadow. */
+  .card {
+    background: var(--color-paper);
+    border: 1px solid var(--color-rule);
+    border-radius: var(--radius-md);
+  }
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-ink-60);
+  }
+  .link {
+    color: var(--color-action);
+    text-decoration: none;
+  }
+  .link:hover {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  /* Quantum gradient — used for quantum text/rules only. */
+  .q-gradient-text {
+    background: linear-gradient(100deg, var(--color-quantum), var(--color-quantum-2));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .q-gradient-rule {
+    height: 2px;
+    background: linear-gradient(90deg, var(--color-quantum), var(--color-quantum-2));
+    border-radius: 1px;
+  }
+  .q-gradient-border {
+    border: 1px solid transparent;
+    background:
+      linear-gradient(var(--color-paper), var(--color-paper)) padding-box,
+      linear-gradient(120deg, var(--color-quantum), var(--color-quantum-2)) border-box;
+    border-radius: var(--radius-md);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
