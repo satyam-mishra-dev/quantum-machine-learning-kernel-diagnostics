@@ -20,7 +20,7 @@ RUNS_DIR = Path(__file__).resolve().parent.parent / "runs"
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 SEED = 42
 N_QUBITS = 4
-EPOCHS = 5
+EPOCHS = 10
 BATCH = 128
 
 
@@ -71,7 +71,8 @@ def quantum_head():
 def build(kind):
     torch.manual_seed(SEED)
     if kind == "hybrid_qnn":
-        head = nn.Sequential(quantum_head(), nn.Unflatten(0, (-1, 1)))
+        head = nn.Sequential(quantum_head(), nn.Unflatten(0, (-1, 1)),
+                             nn.Linear(1, 1))  # scale+bias: expval -> logit
         return nn.Sequential(Trunk(N_QUBITS), head)
     # classical twin: same trunk width, linear head
     return nn.Sequential(Trunk(N_QUBITS), nn.Linear(N_QUBITS, 1))
@@ -93,15 +94,30 @@ def train_eval(kind, train_dl, test_dl):
         print(f"  {kind} epoch {epoch+1}/{EPOCHS} loss={loss.item():.3f}",
               flush=True)
     model.eval()
-    scores, ys = [], []
-    with torch.no_grad():
-        for xb, yb in test_dl:
-            scores.append(model(xb).squeeze(-1))
-            ys.append(yb.squeeze(-1))
-    s, y = torch.cat(scores).numpy(), torch.cat(ys).numpy()
+
+    def collect(dl):
+        scores, ys = [], []
+        with torch.no_grad():
+            for xb, yb in dl:
+                scores.append(model(xb).squeeze(-1))
+                ys.append(yb.squeeze(-1))
+        return torch.cat(scores).numpy(), torch.cat(ys).numpy()
+
+    # threshold chosen on TRAIN (max balanced accuracy); test never peeked
+    s_tr, y_tr = collect(train_dl)
+    from sklearn.metrics import roc_curve
+
+    fpr, tpr, thr = roc_curve(y_tr, s_tr)
+    threshold = float(thr[np.argmax(tpr - fpr)])
+
+    s, y = collect(test_dl)
+    pred = (s >= threshold).astype(int)
     return {
         "auroc": float(roc_auc_score(y, s)),
-        "accuracy": float(((s > 0).astype(int) == y).mean()),
+        "accuracy": float((pred == y).mean()),
+        "sensitivity": float(pred[y == 1].mean()),
+        "specificity": float((1 - pred[y == 0]).mean()),
+        "threshold_from_train": round(threshold, 4),
         "train_seconds": round(time.time() - t0, 1),
         "n_test": int(len(y)),
     }
