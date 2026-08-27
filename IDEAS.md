@@ -2,6 +2,39 @@
 
 Running log of build epochs and PPT-worthy findings. Newest first.
 
+## Epoch 6 — research round 2 pays off: PQK (2026-08-28, ~01:30)
+
+**Projected quantum kernel (PQK) — the night's biggest model win.** Research
+agent surfaced Huang et al.'s prescription for exactly our regime; an
+implementation agent shipped it; verification: best single model on
+Cleveland (0.965 AUROC, best spec@95sens) and ties best classical on WDBC
+(0.996) — at ~1/100th-1/200th of QSVM's training cost (N circuit evals vs
+N^2). Now also in the upload path, where it WON on live-uploaded PIMA
+(best_model: pqk, +0.007 over best classical). PPT: "our second-generation
+quantum model is both better and 100x cheaper — and it came from reading
+the same paper our Scout is built on."
+
+**Adapter validated on 3 unseen datasets via the live API** (ILPD Indian
+liver, heart failure, Parkinson's voice): scout 3/3 consistent
+("classical_will_match" every time, no false advantage calls), worst-case
+upload-to-verdict 2 minutes. Scout lifetime: 7/7.
+
+**Ensemble (q+c soft-vote): honest verdict "marginal, harmless"** — best
+AUROC on WDBC by 0.0004, mid-pack on Cleveland. Kept as a served model,
+never pitched as advantage.
+
+**Gold citation found:** arXiv:2604.18837 — 970-experiment QSVM-vs-classical
+benchmark, 0/29 significant quantum wins, KTA competitive only at ~2000x
+compute. Independently validates our measured KTA failure AND our
+honest-floor framing. Lead with it when a judge pushes back.
+
+**Product polish from validation feedback:** upload jobs now report live
+pipeline stage (ingest → budget → scout → training:<model> → verdict), UI
+driven by real stages; NaN CSVs verified handled; row cap raised to 600.
+
+**In flight:** PIMA robust retune (winner: budget 4, C 1, reps 2) +
+re-benchmark including pqk/ensemble; select-vs-PCA evaluation on PIMA next.
+
 ## Epoch 5 — negative results are results (2026-08-28, ~00:00)
 
 **Trainable-kernel experiment (delegated, verified):** kernel-target
