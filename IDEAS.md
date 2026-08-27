@@ -18,7 +18,7 @@ deployment-floor field, uncalibrated-probability flag, ddof=1 over 5 seeds.
 **Final verified numbers (post-fix, 5-seed leak-free curves):**
 - Scout 4/4 holds. wdbc/cleveland/pima "classical_will_match"
   (g_ratio 0.30/0.45/0.31) → measured parity; quantum_synth
-  "advantage_possible" (2.51) → QSVM 0.972 vs 0.704 best classical.
+  "advantage_possible" (2.51) → QSVM 0.972 vs 0.743 best classical.
 - Quantum-native curves now dominate at EVERY size: n=30 QSVM 0.826 vs
   svm_rbf 0.549. This is the headline chart, now methodologically clean.
 - Cleveland: 4-qubit quantum (VQC 0.956, QSVM 0.955) beats the full-feature

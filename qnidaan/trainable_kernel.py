@@ -50,7 +50,9 @@ def train_alignment(Z_train, y_train, n_qubits, reps=1, steps=STEPS,
     if len(Z_train) > KTA_SUBSAMPLE:
         idx = rng.permutation(len(Z_train))[:KTA_SUBSAMPLE]
         Z_train, y_train = Z_train[idx], np.asarray(y_train)[idx]
-    y_pm = pnp.array(2 * np.asarray(y_train) - 1, requires_grad=False)
+    # plain np, not pnp(requires_grad=False): autograd can't box non-grad
+    # pennylane tensors that appear in ops with traced values
+    y_pm = 2 * np.asarray(y_train) - 1
     Z = pnp.array(Z_train, requires_grad=False)
     kernel = make_trainable_kernel(n_qubits, reps)
     w = pnp.array(np.ones(n_qubits), requires_grad=True)
@@ -59,9 +61,9 @@ def train_alignment(Z_train, y_train, n_qubits, reps=1, steps=STEPS,
     def neg_kta(w):
         K = qml.kernels.square_kernel_matrix(
             Z, lambda a, b: kernel(a, b, w), assume_normalized_kernel=True)
-        Y = pnp.outer(y_pm, y_pm)
+        Y = np.outer(y_pm, y_pm)
         return -pnp.sum(K * Y) / (
-            pnp.sqrt(pnp.sum(K * K)) * pnp.sqrt(pnp.sum(Y * Y)))
+            pnp.sqrt(pnp.sum(K * K)) * np.sqrt(np.sum(Y * Y)))
 
     for step in range(steps):
         w, cost = opt.step_and_cost(neg_kta, w)

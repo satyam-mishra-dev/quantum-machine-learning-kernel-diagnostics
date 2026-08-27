@@ -7,6 +7,33 @@ quantum model beside a matched classical twin → get an honest benchmark report
 with explanations and per-patient uncertainty. Inference showcased on real IBM
 quantum hardware.
 
+## Results (measured, post-review)
+
+Held-out AUROC per dataset. "Quantum" and "classical" are matched twins on
+the same 4-qubit-budget features; "floor" is the best full-feature classical
+model (the never-ship-worse baseline).
+
+| Dataset | Best quantum | Best classical | Full-feature floor |
+|---|---|---|---|
+| WDBC breast cancer | 0.995 (QSVM) | 0.996 (SVM-RBF) | 0.996 (logreg) |
+| Cleveland heart disease | 0.956 (VQC) | 0.961 (logreg) | 0.955 (SVM-RBF) |
+| Pima diabetes | 0.743 (VQC) | 0.732 (logreg) | 0.823 (logreg) |
+| Quantum-native synthetic | 0.972 (QSVM) | 0.743 (random forest) | 0.766 (random forest) |
+| PneumoniaMNIST X-rays | 0.939 (hybrid QNN) | 0.925 (matched CNN) | — (image track) |
+
+Advantage Scout: 4/4 verdicts validated — "classical_will_match" on
+WDBC/Cleveland/Pima (g-ratio 0.296 / 0.450 / 0.309) matched by measured
+parity; "advantage_possible" on quantum_synth (g-ratio 2.510) confirmed by
+QSVM 0.972 vs 0.743.
+
+Hardware receipt: VQC inference on ibm_marrakesh (156 qubits, 4 used,
+1024 shots) with dynamical decoupling, measurement twirling, and TREX
+readout mitigation — job `da8724bsq5js73bko9eg`, 4/4 simulator-hardware
+agreement.
+
+All numbers regenerate from `python -m qnidaan.harness` and land in
+`runs/*.json`.
+
 ## Setup
 
 ```
