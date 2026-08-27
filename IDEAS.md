@@ -2,6 +2,35 @@
 
 Running log of build epochs and PPT-worthy findings. Newest first.
 
+## Epoch 5 — negative results are results (2026-08-28, ~00:00)
+
+**Trainable-kernel experiment (delegated, verified):** kernel-target
+alignment training worked as optimization (KTA +28% pima / +19% cleveland on
+the train subsample) but produced NO held-out gain — pima -0.019, cleveland
+-0.009, both within noise, both negative. Verdict: rejected from the
+pipeline; base QSVM stands. PPT line: "we implemented the literature's
+accuracy lever (Hubregtsen et al. kernel alignment), measured it honestly on
+held-out data, and rejected it — that's what an honest platform does."
+
+**Error-mitigated receipt (delegated, verified):** ibm_marrakesh, job
+`da8724bsq5js73bko9eg` (publicly verifiable), DD+twirling+TREX, 4/4
+sim-hardware agreement, and mitigation visibly tightened score fidelity
+(worst sim-hw gap 0.12 vs 0.44 unmitigated). Demo comparison chart:
+unmitigated vs mitigated receipts.
+
+**Docs shipped:** DEMO.md (3-min click-path runbook + 6 hard-judge Q&As) and
+README results table — all numbers traced to runs/*.json by an agent that
+cross-checked and corrected two of my own epoch-log numbers.
+
+**Serving-path verification:** borderline Cleveland patient (VQC 0.53) →
+conformal set {0,1} → "flag for human review" + uncalibrated-probability
+caution. The safety layer demonstrably fires — use this exact patient in the
+live demo.
+
+**Next:** BreastMNIST (546 train images — genuinely small-sample imaging)
+as a second image-track dataset; it sits exactly in the regime where the
+hybrid QNN edge on PneumoniaMNIST might widen.
+
 ## Epoch 4 — adversarial review + final leak-free numbers (2026-08-27, ~23:30)
 
 **Review (subagent, 9 findings, all fixed):** (1) FATAL: our "geometric
