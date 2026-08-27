@@ -58,9 +58,19 @@ class QSVM:
     """SVC on a precomputed quantum fidelity kernel."""
 
     def __init__(self, n_qubits, reps=1, C=1.0):
+        self.n_qubits, self.reps = n_qubits, reps
         self.kernel = make_kernel(n_qubits, reps)
         self.svc = SVC(kernel="precomputed", C=C, probability=True,
                        random_state=SEED)
+
+    def __getstate__(self):  # qnode closures don't pickle; rebuild on load
+        state = self.__dict__.copy()
+        state.pop("kernel")
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        self.kernel = make_kernel(self.n_qubits, self.reps)
 
     def fit(self, X, y):
         self.X_train_ = np.asarray(X)
@@ -87,7 +97,11 @@ class VQC:
         self.n_qubits, self.n_layers = n_qubits, n_layers
         self.epochs, self.lr, self.batch_size = epochs, lr, batch_size
         self.rng = np.random.default_rng(seed)
-        dev = _device(n_qubits)
+        self._build_circuit()
+
+    def _build_circuit(self):
+        dev = _device(self.n_qubits)
+        n_qubits = self.n_qubits
 
         @qml.qnode(dev, interface="autograd")
         def circuit(weights, x):
@@ -96,6 +110,15 @@ class VQC:
             return qml.expval(qml.PauliZ(0))
 
         self.circuit = circuit
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        state.pop("circuit")
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        self._build_circuit()
 
     def _scores(self, weights, bias, X):
         return np.array([self.circuit(weights, x) for x in X]) + bias
