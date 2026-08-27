@@ -1,0 +1,26 @@
+{
+  "cleveland": {
+    "budget": 4,
+    "C": 1,
+    "reps": 1,
+    "cv_auroc": 0.8556
+  },
+  "pima": {
+    "budget": 4,
+    "C": 1,
+    "reps": 1,
+    "cv_auroc": 0.7902
+  },
+  "wdbc": {
+    "budget": 4,
+    "C": 1,
+    "reps": 1,
+    "cv_auroc": 0.9923
+  },
+  "quantum_synth": {
+    "budget": 4,
+    "C": 1,
+    "reps": 2,
+    "cv_auroc": 0.9451
+  }
+}
