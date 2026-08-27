@@ -10,6 +10,9 @@ export type DatasetCard = {
   best_auroc: number;
   qsvm_auroc: number | null;
   quantum_worth_trying: boolean;
+  deployment_floor?: string | null; // best classical model on FULL features
+  deployment_floor_auroc?: number | null;
+  image_track?: boolean;
 };
 
 export type ModelEval = {
@@ -18,12 +21,21 @@ export type ModelEval = {
   spec_at_95sens?: number;
   train_seconds?: number;
   conformal_qhat?: number;
+  full_features?: boolean; // *_full context entries
+  sensitivity?: number; // image-track models
+  specificity?: number;
+  threshold_from_train?: number;
+  n_test?: number;
 };
 
 export type Scout = {
   kta_quantum: number;
   kta_classical: number;
-  geometric_difference: number;
+  g_asym?: number; // validated in-platform heuristic — drives the verdict
+  g_huang_naive_reg?: number; // Huang et al. 2021, naive regularization — context only
+  g_ratio?: number;
+  g_threshold_sqrt_n?: number;
+  n_scouted?: number;
   quantum_worth_trying: boolean;
   verdict?: string; // "advantage_possible" | "classical_will_match"
 };
@@ -31,7 +43,8 @@ export type Scout = {
 export type RunDetail = {
   dataset: { name: string; title: string; n_features: number; n_train?: number; n_test?: number; prevalence?: number };
   budget: { n_qubits: number; method: string; explained_variance: number | null };
-  scout: Scout;
+  image_track?: boolean;
+  scout?: Scout; // absent for image-track runs
   heldout: Record<string, ModelEval>;
   sample_efficiency?: Array<
     { n_train: number } & Record<string, { auroc_mean: number; auroc_std: number } | number>
@@ -47,6 +60,7 @@ export type Prediction = {
   coverage_guarantee: string;
   top_features: { feature: string; shap: number }[];
   explanation_source: string;
+  probability_calibrated?: boolean;
   model: string;
   dataset: string;
 };
@@ -66,6 +80,8 @@ export type JobStatus = {
     scout: Scout;
     heldout: Record<string, ModelEval>;
     verdict: Verdict;
+    train_rows_used?: number;
+    train_rows_capped?: boolean;
   };
 };
 
@@ -117,6 +133,13 @@ export const MODEL_LABELS: Record<string, string> = {
   random_forest: 'Random Forest',
   qsvm: 'QSVM',
   vqc: 'VQC',
+  logreg_full: 'LogReg (full features)',
+  svm_rbf_full: 'SVM RBF (full features)',
+  random_forest_full: 'Random Forest (full features)',
+  cnn_classical: 'CNN (classical)',
+  hybrid_qnn: 'Hybrid QNN',
 };
 
-export const isQuantum = (m: string): boolean => m === 'qsvm' || m === 'vqc';
+export const isQuantum = (m: string): boolean => m === 'qsvm' || m === 'vqc' || m === 'hybrid_qnn';
+export const isFullFloor = (m: string, e?: ModelEval): boolean =>
+  e?.full_features === true || m.endsWith('_full');

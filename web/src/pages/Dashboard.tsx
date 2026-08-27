@@ -17,6 +17,7 @@ function DatasetTile({ d }: { d: DatasetCard }): ReactNode {
           <div className="flex shrink-0 flex-col items-end gap-1">
             <Badge tone="quantum">{d.n_qubits} qubits</Badge>
             {d.name === 'quantum_synth' && <Badge tone="hold">synthetic benchmark</Badge>}
+            {d.image_track && <Badge tone="action">image track</Badge>}
           </div>
         </div>
 
@@ -38,6 +39,12 @@ function DatasetTile({ d }: { d: DatasetCard }): ReactNode {
             </div>
           )}
         </div>
+
+        {d.deployment_floor != null && d.deployment_floor_auroc != null && (
+          <div className="mt-3 font-mono text-[11px] text-ink-45 tnum">
+            classical floor: {d.deployment_floor_auroc.toFixed(2)} ({d.deployment_floor}, all features)
+          </div>
+        )}
 
         <div className="mt-5 border-t border-rule pt-3">
           {d.quantum_worth_trying ? (

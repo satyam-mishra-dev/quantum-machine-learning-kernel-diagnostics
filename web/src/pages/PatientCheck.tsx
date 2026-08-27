@@ -105,6 +105,11 @@ function ReportCard({ report }: { report: Prediction }): ReactNode {
           <Badge tone={report.prediction === 1 ? 'debit' : 'credit'}>
             prediction: {report.prediction === 1 ? 'disease likely' : 'disease unlikely'}
           </Badge>
+          {report.probability_calibrated === false && (
+            <div className="font-mono text-[11px] text-hold">
+              score-based estimate, not a calibrated probability
+            </div>
+          )}
         </div>
         <div>
           <Eyebrow>Top contributing features</Eyebrow>
