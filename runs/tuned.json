@@ -8,8 +8,8 @@
   "pima": {
     "budget": 4,
     "C": 1,
-    "reps": 1,
-    "cv_auroc": 0.7902
+    "reps": 2,
+    "cv_auroc": 0.7947
   },
   "wdbc": {
     "budget": 4,

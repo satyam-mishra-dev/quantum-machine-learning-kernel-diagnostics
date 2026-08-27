@@ -21,10 +21,13 @@ model (the never-ship-worse baseline).
 | Quantum-native synthetic | 0.972 (QSVM) | 0.743 (random forest) | 0.766 (random forest) |
 | PneumoniaMNIST X-rays | 0.939 (hybrid QNN) | 0.925 (matched CNN) | — (image track) |
 
-Advantage Scout: 4/4 verdicts validated — "classical_will_match" on
-WDBC/Cleveland/Pima (g-ratio 0.296 / 0.450 / 0.309) matched by measured
-parity; "advantage_possible" on quantum_synth (g-ratio 2.510) confirmed by
-QSVM 0.972 vs 0.743.
+Advantage Scout: the "classical_will_match" verdict is 6/6 against
+measured outcomes (WDBC/Cleveland g-ratio 0.30/0.45, plus ILPD, heart
+failure, Parkinson's via the live adapter) — it has never wrongly said
+"don't bother". "advantage_possible" is a necessary-condition signal,
+not a promise: quantum_synth (g-ratio 2.51) → QSVM 0.972 vs 0.743;
+Pima under the deeper reps-2 kernel (g-ratio 1.68) → quantum merely
+tied (VQC 0.743 vs logreg 0.732). The harness always decides.
 
 Hardware receipt: VQC inference on ibm_marrakesh (156 qubits, 4 used,
 1024 shots) with dynamical decoupling, measurement twirling, and TREX

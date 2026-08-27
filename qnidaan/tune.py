@@ -18,7 +18,7 @@ from qnidaan.harness import RUNS_DIR
 from qnidaan.quantum import QSVM
 
 SEED = 42
-MAX_CV_SAMPLES = 150  # ponytail: subsample cap keeps kernel CV minutes, not hours
+MAX_CV_SAMPLES = 250  # ponytail: subsample cap keeps kernel CV minutes, not hours
 GRID = {"budget": [4, 8], "C": [1, 10, 100], "reps": [1, 2]}
 
 
@@ -37,7 +37,7 @@ def tune_dataset(name):
             for reps in GRID["reps"]:
                 t0 = time.time()
                 aurocs = []
-                cv = StratifiedKFold(3, shuffle=True, random_state=SEED)
+                cv = StratifiedKFold(5, shuffle=True, random_state=SEED)
                 for tr, va in cv.split(Z, ytr):
                     m = QSVM(n_qubits=plan.n_qubits, reps=reps, C=C)
                     m.fit(Z[tr], ytr[tr])
