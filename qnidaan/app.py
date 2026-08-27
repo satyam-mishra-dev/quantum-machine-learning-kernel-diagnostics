@@ -74,6 +74,18 @@ def feature_schema(name: str):
     return {"feature_names": b["meta"]["feature_names"]}
 
 
+def _component_labels(plan, names):
+    """Human-readable labels: name PCA components by their top loadings."""
+    if plan.method != "pca":
+        return names
+    pca = plan.pipeline.named_steps["pca"]
+    labels = []
+    for i, comp in enumerate(pca.components_):
+        top = np.argsort(np.abs(comp))[::-1][:2]
+        labels.append(f"PC{i+1} ({', '.join(names[j] for j in top)})")
+    return labels
+
+
 @app.post("/api/predict/{name}")
 def predict(name: str, body: PredictIn):
     b = bundle(name)
@@ -91,8 +103,7 @@ def predict(name: str, body: PredictIn):
         qhat=b["qhats"][body.model],
         z=z,
         Z_background=b["Z_background"],
-        feature_names=[f"PC{i+1}" for i in range(len(z))]
-        if b["plan"].method == "pca" else names,
+        feature_names=_component_labels(b["plan"], names),
     )
     rep["model"] = body.model
     rep["dataset"] = name
