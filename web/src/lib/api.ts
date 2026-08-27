@@ -73,6 +73,7 @@ export type Verdict = {
 
 export type JobStatus = {
   status: 'running' | 'done' | 'error';
+  stage?: string;
   error?: string;
   dataset?: { title: string; n_features: number };
   result?: {

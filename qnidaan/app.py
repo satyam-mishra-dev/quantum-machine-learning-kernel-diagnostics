@@ -146,11 +146,12 @@ def upload(file: UploadFile = File(...), target: str = Form(...),
     except Exception:
         raise HTTPException(422, "could not parse file as CSV")
     job_id = uuid.uuid4().hex[:8]
-    _jobs[job_id] = {"status": "running", "dataset": meta}
+    _jobs[job_id] = {"status": "running", "stage": "ingest", "dataset": meta}
 
     def work():
         try:
-            _jobs[job_id]["result"] = _run_adapter(X, y, meta, budget)
+            _jobs[job_id]["result"] = _run_adapter(X, y, meta, budget,
+                                                  _jobs[job_id])
             _jobs[job_id]["status"] = "done"
         except Exception as e:  # surface, don't crash the server
             _jobs[job_id].update(status="error", error=str(e))
@@ -160,7 +161,7 @@ def upload(file: UploadFile = File(...), target: str = Form(...),
             "n_features": meta["n_features"]}
 
 
-def _run_adapter(X, y, meta, budget):
+def _run_adapter(X, y, meta, budget, job):
     """Universal adapter: the same pipeline the flagships went through."""
     from sklearn.model_selection import train_test_split
 
@@ -176,9 +177,11 @@ def _run_adapter(X, y, meta, budget):
         rng = np.random.default_rng(42)
         idx = rng.permutation(len(Xtr))[:400]
         Xtr, ytr = Xtr[idx], ytr[idx]
+    job["stage"] = "qubit_budget"
     plan = fit_budget(Xtr, budget=budget)
     Ztr, Zte = plan.transform(Xtr), plan.transform(Xte)
     kernel = make_kernel(plan.n_qubits)
+    job["stage"] = "advantage_scout"
     out = {
         "budget": {"n_qubits": plan.n_qubits, "method": plan.method,
                    "explained_variance": plan.explained_variance},
@@ -189,8 +192,10 @@ def _run_adapter(X, y, meta, budget):
     }
     models = {**make_twins(), "qsvm": QSVM(n_qubits=plan.n_qubits, C=10)}
     for mname, m in models.items():
+        job["stage"] = f"training:{mname}"
         m.fit(Ztr, ytr)
         out["heldout"][mname] = evaluate(m, Zte, yte)
+    job["stage"] = "verdict"
     best = max(out["heldout"], key=lambda m: out["heldout"][m]["auroc"])
     out["verdict"] = {
         "best_model": best,

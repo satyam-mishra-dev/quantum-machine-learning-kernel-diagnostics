@@ -6,23 +6,28 @@ import { Badge, Button, Card, ErrorState, Eyebrow, KV, PageTitle } from '../comp
 
 const STAGES = ['Ingest', 'Qubit budget', 'Advantage scout', 'Train quantum + classical twins', 'Verdict'];
 
-/** While the job runs we march through the stages on a timer (the backend
-    reports only running/done), then snap to complete when it finishes. */
-function Pipeline({ done }: { done: boolean }): ReactNode {
+const STAGE_INDEX: Record<string, number> = { ingest: 0, qubit_budget: 1, advantage_scout: 2, verdict: 4 };
+const stageIndex = (s?: string): number | null =>
+  s == null ? null : s.startsWith('training:') ? 3 : STAGE_INDEX[s] ?? null;
+
+/** The polled `stage` field drives the highlight; if the backend doesn't
+    report one we fall back to marching on a timer. */
+function Pipeline({ done, stage: serverStage }: { done: boolean; stage?: string }): ReactNode {
   const [stage, setStage] = useState(0);
+  const fromServer = stageIndex(serverStage);
   const dotRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    if (done) return;
+    if (done || fromServer != null) return;
     const t = setInterval(() => setStage((s) => Math.min(s + 1, STAGES.length - 2)), 3500);
     return () => clearInterval(t);
-  }, [done]);
+  }, [done, fromServer]);
   useEffect(() => {
     const el = dotRef.current;
     if (!el || done) return;
     const tween = gsap.to(el, { opacity: 0.25, duration: 0.6, yoyo: true, repeat: -1, ease: 'sine.inOut' });
     return () => { tween.kill(); };
   }, [done, stage]);
-  const current = done ? STAGES.length : stage;
+  const current = done ? STAGES.length : fromServer ?? stage;
   return (
     <ol className="mt-4 space-y-0">
       {STAGES.map((s, i) => {
@@ -238,7 +243,7 @@ export function Upload(): ReactNode {
             {job?.status === 'error' && <Badge tone="debit">error</Badge>}
             {running && <Badge tone="hold">running</Badge>}
           </div>
-          <Pipeline done={job?.status === 'done'} />
+          <Pipeline done={job?.status === 'done'} stage={job?.stage} />
           {job?.status === 'error' && (
             <div className="mt-3">
               <ErrorState>Pipeline failed: {job.error}</ErrorState>
