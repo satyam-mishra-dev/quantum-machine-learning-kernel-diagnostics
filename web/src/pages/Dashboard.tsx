@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { MODEL_LABELS, useApi, type DatasetCard } from '../lib/api';
 import { Badge, Card, ErrorState, Eyebrow, PageTitle, Skeleton } from '../components/ui';
 import { CountUp, Reveal } from '../components/motion';
+import { HardwareSection } from '../components/Hardware';
 
 function DatasetTile({ d }: { d: DatasetCard }): ReactNode {
   return (
@@ -13,7 +14,10 @@ function DatasetTile({ d }: { d: DatasetCard }): ReactNode {
             <div className="font-mono text-[11px] text-ink-45 uppercase">{d.name}</div>
             <h3 className="mt-0.5 font-serif text-lg leading-snug font-semibold text-ink">{d.title}</h3>
           </div>
-          <Badge tone="quantum">{d.n_qubits} qubits</Badge>
+          <div className="flex shrink-0 flex-col items-end gap-1">
+            <Badge tone="quantum">{d.n_qubits} qubits</Badge>
+            {d.name === 'quantum_synth' && <Badge tone="hold">synthetic benchmark</Badge>}
+          </div>
         </div>
 
         <div className="mt-5 flex items-end gap-6">
@@ -81,6 +85,10 @@ export function Dashboard(): ReactNode {
             ))}
           </Reveal>
         )}
+      </div>
+
+      <div className="mt-8">
+        <HardwareSection full />
       </div>
     </div>
   );

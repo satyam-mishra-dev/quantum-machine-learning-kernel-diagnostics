@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import gsap from 'gsap';
 import { buttonClass, Card, Eyebrow } from '../components/ui';
 import { Reveal } from '../components/motion';
+import { HardwareSection } from '../components/Hardware';
 
 /** Slow-orbiting entangled rings — the only decorative element on the page. */
 function Orbits(): ReactNode {
@@ -98,6 +99,10 @@ export function Landing(): ReactNode {
             </Link>
           </div>
         </div>
+      </section>
+
+      <section className="py-6">
+        <HardwareSection />
       </section>
 
       <section className="py-10">
