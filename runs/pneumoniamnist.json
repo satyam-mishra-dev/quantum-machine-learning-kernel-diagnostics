@@ -17,7 +17,7 @@
       "sensitivity": 0.9076923076923077,
       "specificity": 0.7948717948717948,
       "threshold_from_train": 1.0136,
-      "train_seconds": 5.7,
+      "train_seconds": 4.8,
       "n_test": 624
     },
     "hybrid_qnn": {
@@ -26,9 +26,11 @@
       "sensitivity": 0.9461538461538461,
       "specificity": 0.7435897435897436,
       "threshold_from_train": 0.8926,
-      "train_seconds": 7.9,
+      "train_seconds": 7.6,
       "n_test": 624
     }
   },
-  "image_track": true
+  "image_track": true,
+  "label_convention": "medmnist native: 1=pneumonia (disease), 0=normal",
+  "seed": 42
 }

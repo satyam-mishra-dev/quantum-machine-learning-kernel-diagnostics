@@ -27,9 +27,15 @@ conformal set {0,1} → "flag for human review" + uncalibrated-probability
 caution. The safety layer demonstrably fires — use this exact patient in the
 live demo.
 
-**Next:** BreastMNIST (546 train images — genuinely small-sample imaging)
-as a second image-track dataset; it sits exactly in the regime where the
-hybrid QNN edge on PneumoniaMNIST might widen.
+**BreastMNIST (done, delegated+verified):** the hybrid edge REVERSES —
+classical 0.646±0.021 vs hybrid 0.556±0.089 over 3 seeds; the quantum head
+is seed-unstable at 546 training images and its train-chosen threshold
+collapses (sens 0.095). Honest negative, committed. Demo line: "quantum won
+on pneumonia X-rays, lost on breast ultrasound — and the platform tells you
+which is which. That's the product."
+
+**In flight:** 9-slide problem-first pitch deck (sih2026/Q-Nidaan-pitch.pdf)
+grounded in runs/*.json, quantum confined to one slide + the receipt.
 
 ## Epoch 4 — adversarial review + final leak-free numbers (2026-08-27, ~23:30)
 
