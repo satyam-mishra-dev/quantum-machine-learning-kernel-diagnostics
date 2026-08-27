@@ -17,7 +17,9 @@ def fit_conformal(model, Z_cal, y_cal, alpha=ALPHA):
     probs = model.predict_proba(Z_cal)
     scores = 1 - probs[np.arange(len(y_cal)), y_cal]  # 1 - p(true class)
     n = len(scores)
-    q = np.quantile(scores, min(1.0, np.ceil((n + 1) * (1 - alpha)) / n),
+    if np.ceil((n + 1) * (1 - alpha)) > n:
+        return 1.0  # calibration set too small: sets are always {0,1}
+    q = np.quantile(scores, np.ceil((n + 1) * (1 - alpha)) / n,
                     method="higher")
     return float(q)
 
@@ -51,8 +53,12 @@ def explain_patient(surrogate, Z_background, z, feature_names, top_k=5):
 def patient_report(model, surrogate, qhat, z, Z_background, feature_names):
     prob = float(model.predict_proba(z.reshape(1, -1))[0, 1])
     pset = prediction_set(model, z.reshape(1, -1), qhat)[0]
+    from qnidaan.quantum import VQC
+
     return {
         "risk_probability": round(prob, 4),
+        # VQC maps its expval affinely to [0,1]; rank-valid, not calibrated
+        "probability_calibrated": not isinstance(model, VQC),
         "prediction": int(prob >= 0.5),
         "conformal_set": pset,
         "confident": len(pset) == 1,

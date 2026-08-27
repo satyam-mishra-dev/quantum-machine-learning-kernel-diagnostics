@@ -92,7 +92,7 @@ class QSVM:
 class VQC:
     """Variational classifier: angle embedding + StronglyEntanglingLayers."""
 
-    def __init__(self, n_qubits, n_layers=3, epochs=60, lr=0.1,
+    def __init__(self, n_qubits, n_layers=3, epochs=30, lr=0.1,
                  batch_size=32, seed=SEED):
         self.n_qubits, self.n_layers = n_qubits, n_layers
         self.epochs, self.lr, self.batch_size = epochs, lr, batch_size
@@ -140,11 +140,13 @@ class VQC:
             return pnp.mean((scores - yb) ** 2)
 
         n = len(X)
-        for _ in range(self.epochs):
-            idx = self.rng.permutation(n)[: self.batch_size]
-            weights, bias = opt.step(
-                lambda w, b: cost(w, b, X[idx], y_pm[idx]), weights, bias
-            )
+        for _ in range(self.epochs):  # true epochs: every batch, every pass
+            order = self.rng.permutation(n)
+            for start in range(0, n, self.batch_size):
+                idx = order[start:start + self.batch_size]
+                weights, bias = opt.step(
+                    lambda w, b: cost(w, b, X[idx], y_pm[idx]), weights, bias
+                )
         self.weights_, self.bias_ = weights, bias
         return self
 

@@ -44,13 +44,20 @@ def datasets():
         r = json.loads(f.read_text())
         if "heldout" not in r:  # tuned.json, hardware_*.json live here too
             continue
-        best = max(r["heldout"], key=lambda m: r["heldout"][m]["auroc"])
+        servable = [m for m in r["heldout"] if not m.endswith("_full")]
+        best = max(servable, key=lambda m: r["heldout"][m]["auroc"])
+        floors = [m for m in r["heldout"] if m.endswith("_full")]
+        floor = (max(floors, key=lambda m: r["heldout"][m]["auroc"])
+                 if floors else None)
         out.append({
             "name": r["dataset"]["name"],
             "title": r["dataset"]["title"],
             "n_qubits": r["budget"]["n_qubits"],
             "best_model": best,
             "best_auroc": r["heldout"][best]["auroc"],
+            "deployment_floor": floor,
+            "deployment_floor_auroc": (r["heldout"][floor]["auroc"]
+                                       if floor else None),
             "qsvm_auroc": r["heldout"].get("qsvm", {}).get("auroc"),
             "quantum_worth_trying": r.get("scout", {}).get(
                 "quantum_worth_trying"),
@@ -128,7 +135,10 @@ def upload(file: UploadFile = File(...), target: str = Form(...),
            budget: int = Form(8)):
     from qnidaan.datasets import load_csv
 
-    raw = file.file.read()
+    budget = max(1, min(budget, 10))  # a 30-qubit statevector is an OOM
+    raw = file.file.read(5_000_001)
+    if len(raw) > 5_000_000:
+        raise HTTPException(413, "CSV too large (5 MB cap for the demo)")
     try:
         X, y, meta = load_csv(io.BytesIO(raw), target)
     except ValueError as e:
@@ -161,6 +171,11 @@ def _run_adapter(X, y, meta, budget):
 
     Xtr, Xte, ytr, yte = train_test_split(X, y, test_size=0.2,
                                           random_state=42, stratify=y)
+    capped = len(Xtr) > 400  # quantum kernel is O(n^2) simulated circuits
+    if capped:
+        rng = np.random.default_rng(42)
+        idx = rng.permutation(len(Xtr))[:400]
+        Xtr, ytr = Xtr[idx], ytr[idx]
     plan = fit_budget(Xtr, budget=budget)
     Ztr, Zte = plan.transform(Xtr), plan.transform(Xte)
     kernel = make_kernel(plan.n_qubits)
@@ -169,6 +184,8 @@ def _run_adapter(X, y, meta, budget):
                    "explained_variance": plan.explained_variance},
         "scout": scout(Ztr, ytr, kernel),
         "heldout": {},
+        "train_rows_used": int(len(ytr)),
+        "train_rows_capped": capped,
     }
     models = {**make_twins(), "qsvm": QSVM(n_qubits=plan.n_qubits, C=10)}
     for mname, m in models.items():
