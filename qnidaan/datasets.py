@@ -1,0 +1,128 @@
+"""Dataset loaders. Each returns (X, y, meta) with y in {0,1}, 1 = disease.
+
+Downloads land in data/ (gitignored). Test split is carved once with a fixed
+seed and never touched during training/model-selection.
+"""
+import io
+import urllib.request
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
+from sklearn.model_selection import train_test_split
+
+DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+SEED = 42
+TEST_FRACTION = 0.2
+
+CLEVELAND_URL = (
+    "https://archive.ics.uci.edu/ml/machine-learning-databases/"
+    "heart-disease/processed.cleveland.data"
+)
+PIMA_URL = (
+    "https://raw.githubusercontent.com/jbrownlee/Datasets/master/"
+    "pima-indians-diabetes.csv"
+)
+
+
+def _fetch(url: str, fname: str) -> Path:
+    DATA_DIR.mkdir(exist_ok=True)
+    path = DATA_DIR / fname
+    if not path.exists():
+        with urllib.request.urlopen(url, timeout=60) as r:
+            path.write_bytes(r.read())
+    return path
+
+
+def load_wdbc():
+    from sklearn.datasets import load_breast_cancer
+
+    ds = load_breast_cancer()
+    # sklearn: 0 = malignant. Flip so 1 = disease (malignant).
+    y = (ds.target == 0).astype(int)
+    return ds.data, y, {
+        "name": "wdbc",
+        "title": "Breast Cancer Wisconsin (Diagnostic)",
+        "n_features": ds.data.shape[1],
+        "feature_names": list(ds.feature_names),
+    }
+
+
+def load_cleveland():
+    path = _fetch(CLEVELAND_URL, "cleveland.csv")
+    cols = [
+        "age", "sex", "cp", "trestbps", "chol", "fbs", "restecg", "thalach",
+        "exang", "oldpeak", "slope", "ca", "thal", "num",
+    ]
+    df = pd.read_csv(path, names=cols, na_values="?")
+    df = df.dropna()
+    y = (df.pop("num") > 0).astype(int).to_numpy()
+    return df.to_numpy(dtype=float), y, {
+        "name": "cleveland",
+        "title": "Cleveland Heart Disease (UCI)",
+        "n_features": df.shape[1],
+        "feature_names": list(df.columns),
+    }
+
+
+def load_pima():
+    path = _fetch(PIMA_URL, "pima.csv")
+    cols = [
+        "pregnancies", "glucose", "bp", "skin", "insulin", "bmi",
+        "pedigree", "age", "outcome",
+    ]
+    df = pd.read_csv(path, names=cols)
+    y = df.pop("outcome").to_numpy(dtype=int)
+    return df.to_numpy(dtype=float), y, {
+        "name": "pima",
+        "title": "Pima Indians Diabetes",
+        "n_features": df.shape[1],
+        "feature_names": list(df.columns),
+    }
+
+
+LOADERS = {"wdbc": load_wdbc, "cleveland": load_cleveland, "pima": load_pima}
+
+
+def load_split(name: str):
+    """Load a dataset and return its canonical (train, test) split."""
+    X, y, meta = LOADERS[name]()
+    Xtr, Xte, ytr, yte = train_test_split(
+        X, y, test_size=TEST_FRACTION, random_state=SEED, stratify=y
+    )
+    meta.update(n_train=len(ytr), n_test=len(yte),
+                prevalence=float(y.mean()))
+    return Xtr, Xte, ytr, yte, meta
+
+
+def load_csv(path_or_buf, target_column: str):
+    """Universal adapter entry point: any CSV with a binary target column."""
+    df = pd.read_csv(path_or_buf)
+    if target_column not in df.columns:
+        raise ValueError(f"target column {target_column!r} not in CSV")
+    df = df.dropna()
+    y_raw = df.pop(target_column)
+    classes = sorted(y_raw.unique())
+    if len(classes) != 2:
+        raise ValueError(f"need binary target, got classes {classes}")
+    y = (y_raw == classes[1]).astype(int).to_numpy()
+    X = df.select_dtypes("number")
+    dropped = [c for c in df.columns if c not in X.columns]
+    return X.to_numpy(dtype=float), y, {
+        "name": "custom",
+        "title": "Uploaded dataset",
+        "n_features": X.shape[1],
+        "feature_names": list(X.columns),
+        "dropped_non_numeric": dropped,
+        "positive_class": str(classes[1]),
+    }
+
+
+if __name__ == "__main__":
+    for name in LOADERS:
+        Xtr, Xte, ytr, yte, meta = load_split(name)
+        assert set(np.unique(ytr)) == {0, 1}
+        assert len(Xtr) > len(Xte)
+        print(f"{name}: train={Xtr.shape} test={Xte.shape} "
+              f"prevalence={meta['prevalence']:.2f}")
+    print("datasets OK")
