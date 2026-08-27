@@ -62,7 +62,7 @@ function Pipeline({ done, stage: serverStage }: { done: boolean; stage?: string 
 
 function VerdictCard({ result }: { result: NonNullable<JobStatus['result']> }): ReactNode {
   const { verdict, heldout, budget, scout } = result;
-  const delta = verdict.qsvm_vs_best_classical;
+  const delta = verdict.quantum_vs_best_classical ?? verdict.qsvm_vs_best_classical;
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const el = ref.current;
