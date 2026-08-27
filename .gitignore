@@ -1,0 +1,25 @@
+# secrets — never commit
+.env
+*.env
+.qiskit/
+
+# local data stays local
+data/
+*.csv
+*.npz
+*.h5
+
+# python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# node
+node_modules/
+dist/
+
+# artifacts
+models/
+runs/
+.DS_Store
