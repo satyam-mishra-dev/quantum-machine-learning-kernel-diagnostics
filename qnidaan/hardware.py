@@ -34,8 +34,12 @@ def main(dataset: str, n_patients: int, shots: int):
     plan = bundle["plan"]
 
     _, Xte, _, yte, _ = load_split(dataset)
-    Z = plan.transform(Xte)[:n_patients]
-    truth = yte[:n_patients]
+    # stratified pick so the receipt shows both classes
+    pos = np.flatnonzero(yte == 1)[: max(1, n_patients // 2)]
+    neg = np.flatnonzero(yte == 0)[: n_patients - len(pos)]
+    idx = np.concatenate([pos, neg])
+    Z = plan.transform(Xte)[idx]
+    truth = yte[idx]
 
     sim_scores = vqc._scores(vqc.weights_, vqc.bias_, Z)
 
