@@ -44,7 +44,10 @@ Scroll to the **hardware receipt** section.
 > classic tabular datasets — breast cancer, heart disease, diabetes —
 > it's honest parity, and we say so. The caption under each card is the
 > full-feature classical floor: the platform never ships a model worse
-> than plain classical ML without telling you."
+> than plain classical ML without telling you. One more model on every
+> card: PQK, our projected quantum kernel — best single model on
+> Cleveland at 0.965 and tied with the best classical on WDBC at 0.996,
+> at roughly 1/100th of QSVM's training cost."
 
 ### Stop 3 — quantum_synth detail (the headline chart)
 Open the sample-efficiency chart.
@@ -60,8 +63,10 @@ Open the sample-efficiency chart.
 
 > "Same scout, opposite verdict. On Cleveland heart disease it said
 > 'classical will match' — g-ratio 0.450, well below threshold — and it was
-> right: QSVM 0.955, VQC 0.956, logistic regression 0.961. A tool that only
-> ever says 'quantum wins' is marketing; ours is a validated predictor.
+> right: QSVM 0.955, VQC 0.956, logistic regression 0.961. And the quiet
+> star: PQK, the projected quantum kernel, is the best single model on this
+> dataset at 0.965 — trained in 0.17 seconds versus QSVM's 15.6. A tool that
+> only ever says 'quantum wins' is marketing; ours is a validated predictor.
 > One more thing: the quantum models use just 4 qubits — 4 PCA components —
 > and still match the full 13-feature classical floor at 0.955. Four numbers
 > into a quantum circuit matched thirteen into classical ML."
@@ -74,22 +79,30 @@ Open the sample-efficiency chart.
 > SHAP explanation of which features drove the call. That's the clinical
 > safety layer: the model knows when it doesn't know."
 
-### Stop 6 — Upload
+### Stop 6 — Upload (use the Pima CSV)
 
-> "It's not a fixed demo — drop any biomedical CSV. Watch the pipeline:
-> qubit budgeting, quantum and classical twins trained side by side, the
-> scout's verdict, and an honest verdict card at the end. The platform
-> tells you whether quantum was worth it for *your* data."
+> "It's not a fixed demo — drop any biomedical CSV. Watch the live stages:
+> ingest, qubit budgeting, scout, quantum and classical twins trained side
+> by side, honest verdict card. And watch the budgeting step: the platform
+> picked feature-selection here, not PCA — it CV-tests both per dataset
+> (0.814 vs 0.777 on Pima) and shows the runner-up score. That choice
+> closed Pima's compression gap: the compressed models jumped to 0.79–0.81
+> against a 0.823 full-feature floor. Now open the patient explanation —
+> it names glucose, age, insulin, and BMI, actual clinical features a
+> doctor can act on, instead of 'principal component 1'."
 
 ## 3. Hard judge questions
 
 **Q: Does quantum actually beat classical here?**
-A: On the three classic tabular datasets, no — and the platform says so
-(WDBC: QSVM 0.995 vs classical 0.996; Cleveland: 0.955/0.956 vs 0.961;
-PIMA: VQC 0.743 vs 0.732). It wins where theory says it should: the
-quantum-native set (QSVM 0.972 vs best classical 0.743) and chest X-rays
-(hybrid QNN 0.939 vs matched CNN 0.925, sensitivity 94.6% vs 90.8%).
-Measuring that boundary per dataset, honestly, is the product.
+A: On the three classic tabular datasets it's parity — and the platform
+says so (WDBC: PQK 0.996 vs classical 0.996; Cleveland: PQK 0.965 vs
+logreg 0.961; PIMA: VQC 0.802 vs SVM-RBF 0.806, full-feature floor 0.823
+still ships). It wins where theory says it should: the quantum-native set
+(QSVM 0.972 vs best classical 0.743) and chest X-rays (hybrid QNN 0.939
+vs matched CNN 0.925, sensitivity 94.6% vs 90.8%). A 970-experiment
+independent benchmark (arXiv:2604.18837) found 0/29 statistically
+significant QSVM wins on classical data — which is exactly why measuring
+that boundary per dataset, honestly, is the product.
 
 **Q: Why quantum ML at all if classical matches on real data?**
 A: Two measured reasons. First, sample efficiency in the right regime: on
@@ -99,12 +112,27 @@ compression: on Cleveland, 4 qubits matched the 13-feature classical floor
 (0.955 vs 0.955). And on images we already have a real measured win.
 
 **Q: Is the Advantage Scout real science or a made-up score?**
-A: It's the geometric-difference test from Huang et al. (Nature Comms 2021).
-We compute both kernel directions, cite Huang for his form, and drive the
-verdict from our own empirically validated asymmetric ratio. It survived an
-adversarial audit, and it's 4-for-4: three 'classical will match' verdicts
-(g-ratio 0.296, 0.450, 0.309) all came out parity; the one 'advantage
-possible' verdict (2.51) came out +23 AUROC points for quantum.
+A: It's the geometric-difference test from Huang et al. (Nature Comms 2021),
+with our own empirically validated asymmetric ratio, and its record is
+deliberately stated asymmetrically. "Classical will match" is 6/6 against
+measured outcomes — WDBC (g 0.30), Cleveland (0.45), plus ILPD, heart
+failure, and Parkinson's through the live adapter — it has never wrongly
+said "don't bother". "Advantage possible" is a necessary condition, not a
+promise: on the quantum-native set (g 2.51) it preceded a +23-AUROC-point
+quantum win, but on Pima under the deeper reps-2 kernel quantum merely
+tied. When it says possible, the harness decides. We also implemented
+kernel-target-alignment training, measured it on held-out data, and
+rejected it (negative gain on both datasets) — no knob was tuned to make
+the record look cleaner.
+
+**Q: Why is your quantum model 100x faster than typical QSVMs?**
+A: PQK — the projected quantum kernel, from the same Huang et al. paper the
+Scout is built on. A fidelity QSVM needs a circuit per *pair* of patients
+(N² evaluations); PQK measures each patient's circuit once (N evaluations)
+and feeds the projected features to a classical kernel. Measured: 0.17 s vs
+15.6 s to train on Cleveland, 0.47 s vs 133.7 s on Pima — and it's the best
+single model on Cleveland (0.965) while tying best classical on WDBC
+(0.996).
 
 **Q: What about hardware noise? Simulators are easy.**
 A: We ran it. VQC inference on ibm_marrakesh with error mitigation
@@ -114,11 +142,13 @@ job id `da8724bsq5js73bko9eg`. Noise attenuates scores toward zero
 simulator. Receipts, not projections.
 
 **Q: Do you retrain per patient? Is inference practical?**
-A: No retraining. Models train once per dataset (QSVM in ~15–98 s on the
-tabular sets, hybrid QNN in 7.9 s); per-patient scoring is a single forward
-pass and returns instantly, with the conformal calibration already baked in
-from a held-out split. Retraining only happens when a new dataset is
-uploaded.
+A: No retraining. Models train once per dataset (QSVM in ~16–134 s on the
+tabular sets, PQK in under half a second, hybrid QNN in 7.6 s); per-patient
+scoring is a single forward pass and returns instantly, with the conformal
+calibration already baked in from a held-out split. Retraining only happens
+when a new dataset is uploaded — and the live adapter is validated
+end-to-end on three unseen datasets (ILPD Indian liver, heart failure,
+Parkinson's): worst case 2 minutes from upload to verdict.
 
 **Q: What's novel vs IBM's QBioCode?**
 A: QBioCode benchmarks QSVC/VQC against classical models and profiles
