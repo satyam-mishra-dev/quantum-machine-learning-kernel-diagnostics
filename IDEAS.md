@@ -2,6 +2,37 @@
 
 Running log of build epochs and PPT-worthy findings. Newest first.
 
+## Epoch 3 — the loop closes: Scout goes 4/4 (2026-08-27, ~22:30)
+
+**THE demo story, fully measured:** after tuning, the Advantage Scout is
+4-for-4. Three real datasets: "classical_will_match" (g_ratio 0.30-0.46) →
+measured parity (Cleveland QSVM 0.955 vs logreg 0.959; WDBC QSVM 0.996 vs
+0.997). One quantum-native dataset: "advantage_possible" (g_ratio 2.11) →
+measured QSVM 0.976 vs best classical 0.743 (+23 AUROC points). The platform
+routes both regimes correctly. Auto-tuning also closed Cleveland's
+quantum-classical gap from 7 points to parity, and found reps=2 on the
+synthetic set on its own (CV 0.945 vs 0.655) — it rediscovered the labeling
+kernel's structure.
+
+**Design flaw caught & fixed:** tuner picked budget=4 for QSVM which also
+compressed the classical twins → everyone got worse on PIMA. Split roles:
+fair-comparison twins (compressed) + full-feature classical floor
+("*_full" in heldout) — "the platform never ships worse than plain
+classical ML" is now measured, not asserted.
+
+**Competitive research (agent, cited):** geometric-difference scout is NOT
+productized anywhere (only Huang et al. paper + a PennyLane tutorial) — our
+novelty claim verified. Closest competitor: IBM QBioCode (QSVC/VQC vs
+classical + profiling) but no scout, no conformal, no clinician report, no
+hardware receipts — perfect differentiation slide. Literature anchors for
+PPT: WDBC hybrid QSVM-QNN 99% (PeerJ CS 2026), heart QSVM 90.26%
+(MDPI AI 2026), QML breast-cancer review avg AUC 0.91.
+
+**Hardware upgrade:** rewrote runner as native Qiskit EstimatorV2 with
+dynamical decoupling + measurement twirling + TREX readout mitigation
+(resilience_level=1); PennyLane→Qiskit translation verified to 5e-16 on
+simulator before any QPU spend. "Error-mitigated receipts" line for PPT.
+
 ## Epoch 2 — the Scout validation story (2026-08-27, late night)
 
 **Headline finding (PPT centerpiece candidate):** across all three flagship
