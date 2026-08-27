@@ -23,17 +23,33 @@ N_QUBITS = 4
 EPOCHS = 10
 BATCH = 128
 
+# name -> (medmnist class, flip_labels, title, label_convention)
+DATASETS = {
+    "pneumoniamnist": (
+        "PneumoniaMNIST", False,
+        "PneumoniaMNIST chest X-rays (MedMNIST v2)",
+        "medmnist native: 1=pneumonia (disease), 0=normal"),
+    "breastmnist": (
+        "BreastMNIST", True,
+        "BreastMNIST breast ultrasound (MedMNIST v2)",
+        "flipped from medmnist (native 0=malignant, 1=normal/benign): "
+        "ours 1=malignant (disease), 0=normal/benign"),
+}
 
-def loaders():
-    from medmnist import PneumoniaMNIST
 
+def loaders(name):
+    import medmnist
+
+    cls_name, flip, _, _ = DATASETS[name]
+    cls = getattr(medmnist, cls_name)
     DATA_DIR.mkdir(exist_ok=True)
     tf = lambda img: torch.tensor(
         np.asarray(img, dtype=np.float32)[None] / 255.0)
-    tr = PneumoniaMNIST(split="train", download=True, root=str(DATA_DIR),
-                        transform=tf)
-    te = PneumoniaMNIST(split="test", download=True, root=str(DATA_DIR),
-                        transform=tf)
+    ttf = (lambda y: 1 - y) if flip else None
+    tr = cls(split="train", download=True, root=str(DATA_DIR),
+             transform=tf, target_transform=ttf)
+    te = cls(split="test", download=True, root=str(DATA_DIR),
+             transform=tf, target_transform=ttf)
     mk = lambda ds, sh: torch.utils.data.DataLoader(
         ds, batch_size=BATCH, shuffle=sh)
     return mk(tr, True), mk(te, False)
@@ -124,11 +140,20 @@ def train_eval(kind, train_dl, test_dl):
 
 
 if __name__ == "__main__":
-    train_dl, test_dl = loaders()
+    import argparse
+
+    ap = argparse.ArgumentParser()
+    ap.add_argument("dataset", nargs="?", default="pneumoniamnist",
+                    choices=list(DATASETS))
+    ap.add_argument("--seed", type=int, default=42)
+    args = ap.parse_args()
+    SEED = args.seed
+    _, _, title, convention = DATASETS[args.dataset]
+    train_dl, test_dl = loaders(args.dataset)
     result = {
         "dataset": {
-            "name": "pneumoniamnist",
-            "title": "PneumoniaMNIST chest X-rays (MedMNIST v2)",
+            "name": args.dataset,
+            "title": title,
             "n_features": 784,
             "feature_names": [],
         },
@@ -136,11 +161,13 @@ if __name__ == "__main__":
                    "explained_variance": None},
         "heldout": {},
         "image_track": True,
+        "label_convention": convention,
+        "seed": SEED,
     }
     for kind in ["cnn_classical", "hybrid_qnn"]:
         result["heldout"][kind] = train_eval(kind, train_dl, test_dl)
         print(f"{kind}: {result['heldout'][kind]}", flush=True)
     RUNS_DIR.mkdir(exist_ok=True)
-    (RUNS_DIR / "pneumoniamnist.json").write_text(
+    (RUNS_DIR / f"{args.dataset}.json").write_text(
         json.dumps(result, indent=2))
-    print("wrote runs/pneumoniamnist.json")
+    print(f"wrote runs/{args.dataset}.json")

@@ -1,0 +1,36 @@
+{
+  "dataset": {
+    "name": "breastmnist",
+    "title": "BreastMNIST breast ultrasound (MedMNIST v2)",
+    "n_features": 784,
+    "feature_names": []
+  },
+  "budget": {
+    "n_qubits": 4,
+    "method": "cnn_trunk",
+    "explained_variance": null
+  },
+  "heldout": {
+    "cnn_classical": {
+      "auroc": 0.6228070175438597,
+      "accuracy": 0.6282051282051282,
+      "sensitivity": 0.5714285714285714,
+      "specificity": 0.6491228070175439,
+      "threshold_from_train": -1.1298,
+      "train_seconds": 0.6,
+      "n_test": 156
+    },
+    "hybrid_qnn": {
+      "auroc": 0.4605263157894737,
+      "accuracy": 0.7243589743589743,
+      "sensitivity": 0.09523809523809523,
+      "specificity": 0.956140350877193,
+      "threshold_from_train": 0.5665,
+      "train_seconds": 0.9,
+      "n_test": 156
+    }
+  },
+  "image_track": true,
+  "label_convention": "flipped from medmnist (native 0=malignant, 1=normal/benign): ours 1=malignant (disease), 0=normal/benign",
+  "seed": 42
+}
