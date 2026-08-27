@@ -8,6 +8,7 @@ from dataclasses import dataclass, field
 
 import numpy as np
 from sklearn.decomposition import PCA
+from sklearn.feature_selection import SelectKBest, mutual_info_classif
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
 
@@ -16,20 +17,33 @@ from sklearn.preprocessing import MinMaxScaler, StandardScaler
 class BudgetPlan:
     n_features_in: int
     n_qubits: int
-    method: str            # "scale" | "pca"
+    method: str            # "scale" | "pca" | "select"
     explained_variance: float | None = None
     pipeline: Pipeline = field(default=None, repr=False)
+    selected_features: list | None = None  # "select" only
 
     def transform(self, X):
         return self.pipeline.transform(X)
 
 
-def fit_budget(X_train, budget: int = 8) -> BudgetPlan:
+def fit_budget(X_train, budget: int = 8, y=None,
+               method: str = "pca") -> BudgetPlan:
     d = X_train.shape[1]
     if d <= budget:
         pipe = Pipeline([("scale", MinMaxScaler((0, np.pi)))])
         pipe.fit(X_train)
         return BudgetPlan(d, d, "scale", None, pipe)
+    if method == "select":  # mutual-information top-k, keeps raw features
+        if y is None:
+            raise ValueError('method="select" requires y')
+        pipe = Pipeline([
+            ("select", SelectKBest(mutual_info_classif, k=budget)),
+            ("scale", MinMaxScaler((0, np.pi))),
+        ])
+        pipe.fit(X_train, y)
+        idx = pipe.named_steps["select"].get_support(indices=True)
+        return BudgetPlan(d, budget, "select", None, pipe,
+                          [int(i) for i in idx])
     pipe = Pipeline([
         ("std", StandardScaler()),
         ("pca", PCA(n_components=budget, random_state=0)),
@@ -49,4 +63,16 @@ if __name__ == "__main__":
     assert Z.min() >= -1e-9 and Z.max() <= np.pi + 1e-9
     small = fit_budget(X[:, :5], budget=8)
     assert small.n_qubits == 5 and small.method == "scale"
-    print(f"budgeter OK (pca kept {plan.explained_variance:.0%} variance)")
+    y = (X[:, 3] + 0.1 * rng.normal(size=100) > 0).astype(int)
+    sel = fit_budget(X, budget=8, y=y, method="select")
+    Zs = sel.transform(X)
+    assert Zs.shape == (100, 8) and sel.method == "select"
+    assert len(sel.selected_features) == 8 and 3 in sel.selected_features
+    assert Zs.min() >= -1e-9 and Zs.max() <= np.pi + 1e-9
+    try:
+        fit_budget(X, budget=8, method="select")
+        raise AssertionError("select without y should raise")
+    except ValueError:
+        pass
+    print(f"budgeter OK (pca kept {plan.explained_variance:.0%} variance, "
+          f"select kept {sel.selected_features})")

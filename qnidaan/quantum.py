@@ -19,16 +19,21 @@ def _device(n_qubits):
 
 # ---------------------------------------------------------------- QSVM ------
 
+def _feature_map(x, wires, reps):
+    """Shared AngleEmbedding + IsingZZ encoding (QSVM and PQK)."""
+    for _ in range(reps):
+        qml.AngleEmbedding(x, wires=wires, rotation="Y")
+        for i in range(len(wires) - 1):
+            qml.IsingZZ(x[i] * x[i + 1], wires=[wires[i], wires[i + 1]])
+
+
 def make_kernel(n_qubits, reps=1):
     """Fidelity kernel with a ZZ-style entangling feature map."""
     dev = _device(n_qubits)
     wires = list(range(n_qubits))
 
     def feature_map(x):
-        for _ in range(reps):
-            qml.AngleEmbedding(x, wires=wires, rotation="Y")
-            for i in range(n_qubits - 1):
-                qml.IsingZZ(x[i] * x[i + 1], wires=[i, i + 1])
+        _feature_map(x, wires, reps)
 
     @qml.qnode(dev)
     def kernel_circuit(x1, x2):
@@ -82,6 +87,66 @@ class QSVM:
     def predict_proba(self, X):
         K = kernel_matrix(self.kernel, np.asarray(X), self.X_train_)
         return self.svc.predict_proba(K)
+
+    def predict(self, X):
+        return (self.predict_proba(X)[:, 1] >= 0.5).astype(int)
+
+
+# ----------------------------------------------------------------- PQK ------
+
+class PQK:
+    """Projected quantum kernel: same feature map as QSVM, but measure 1-local
+    <X>, <Y>, <Z> on every wire (3*n_qubits features, N circuit evals — linear,
+    not N^2) and classify with an RBF SVC on top."""
+
+    GAMMAS = (0.1, 0.5, 1, 2)
+
+    def __init__(self, n_qubits, reps=1, C=1.0):
+        self.n_qubits, self.reps, self.C = n_qubits, reps, C
+        self._build_circuit()
+
+    def _build_circuit(self):
+        dev = _device(self.n_qubits)
+        wires = list(range(self.n_qubits))
+        reps = self.reps
+
+        @qml.qnode(dev)
+        def circuit(x):
+            _feature_map(x, wires, reps)
+            return ([qml.expval(qml.PauliX(w)) for w in wires]
+                    + [qml.expval(qml.PauliY(w)) for w in wires]
+                    + [qml.expval(qml.PauliZ(w)) for w in wires])
+
+        self.circuit = circuit
+
+    def __getstate__(self):  # qnode closures don't pickle; rebuild on load
+        state = self.__dict__.copy()
+        state.pop("circuit")
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        self._build_circuit()
+
+    def _features(self, X):
+        return np.array([self.circuit(x) for x in np.asarray(X)],
+                        dtype=float)
+
+    def fit(self, X, y):
+        from sklearn.model_selection import GridSearchCV
+
+        F = self._features(X)
+        gs = GridSearchCV(
+            SVC(kernel="rbf", C=self.C, probability=True, random_state=SEED),
+            {"gamma": list(self.GAMMAS)}, cv=3,
+        )
+        gs.fit(F, y)
+        self.svc = gs.best_estimator_
+        self.gamma_ = gs.best_params_["gamma"]
+        return self
+
+    def predict_proba(self, X):
+        return self.svc.predict_proba(self._features(X))
 
     def predict(self, X):
         return (self.predict_proba(X)[:, 1] >= 0.5).astype(int)
@@ -172,6 +237,12 @@ if __name__ == "__main__":
     acc_q = (q.predict(Xte) == yte).mean()
     v = VQC(n_qubits=2, epochs=40).fit(Xtr, ytr)
     acc_v = (v.predict(Xte) == yte).mean()
-    print(f"moons: qsvm acc={acc_q:.2f}, vqc acc={acc_v:.2f}")
-    assert acc_q > 0.8 and acc_v > 0.7
+    p = PQK(n_qubits=2).fit(Xtr, ytr)
+    acc_p = (p.predict(Xte) == yte).mean()
+    import pickle
+    p2 = pickle.loads(pickle.dumps(p))
+    assert (p2.predict(Xte) == p.predict(Xte)).all()
+    print(f"moons: qsvm acc={acc_q:.2f}, vqc acc={acc_v:.2f}, "
+          f"pqk acc={acc_p:.2f} (gamma={p.gamma_})")
+    assert acc_q > 0.8 and acc_v > 0.7 and acc_p > 0.7
     print("quantum models OK")

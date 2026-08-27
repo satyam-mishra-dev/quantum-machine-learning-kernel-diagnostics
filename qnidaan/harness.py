@@ -14,7 +14,7 @@ import numpy as np
 from qnidaan.budgeter import fit_budget
 from qnidaan.classical import evaluate, make_twins
 from qnidaan.datasets import load_split
-from qnidaan.quantum import QSVM, VQC, make_kernel
+from qnidaan.quantum import PQK, QSVM, VQC, make_kernel
 from qnidaan.scout import scout
 
 RUNS_DIR = Path(__file__).resolve().parent.parent / "runs"
@@ -22,6 +22,16 @@ MODELS_DIR = Path(__file__).resolve().parent.parent / "models"
 SEED = 42
 CURVE_SIZES = [30, 60, 100, 200]
 CURVE_SEEDS = [0, 1, 2, 3, 4]
+
+
+class SoftVote:
+    """Average predict_proba of already-fitted members (no fit of its own)."""
+
+    def __init__(self, members):
+        self.members = members
+
+    def predict_proba(self, X):
+        return np.mean([m.predict_proba(X) for m in self.members], axis=0)
 
 
 def _fit_eval(model, Ztr, ytr, Zte, yte):
@@ -125,6 +135,7 @@ def run_dataset(name, budget=8, curves=True):
     models = {
         **make_twins(),
         "qsvm": QSVM(n_qubits=plan.n_qubits, **qsvm_kw),
+        "pqk": PQK(n_qubits=plan.n_qubits, reps=qsvm_kw["reps"]),
         "vqc": VQC(n_qubits=plan.n_qubits, epochs=30),
     }
     result["qsvm_config"] = {"tuned": bool(tuned), **qsvm_kw}
@@ -135,6 +146,15 @@ def run_dataset(name, budget=8, curves=True):
         qhats[mname] = fit_conformal(model, Zcal, ycal)
         result["heldout"][mname]["conformal_qhat"] = qhats[mname]
         print(f"  {name}/{mname}: {result['heldout'][mname]}", flush=True)
+
+    # quantum-classical soft vote over the compressed twins
+    vote = SoftVote([models["qsvm"], models["logreg"]])
+    ens = evaluate(vote, Zte, yte)
+    ens["conformal_qhat"] = fit_conformal(vote, Zcal, ycal)
+    result["heldout"]["ensemble_q+c"] = ens
+    models["ensemble_q+c"] = vote  # servable like any other model
+    qhats["ensemble_q+c"] = ens["conformal_qhat"]
+    print(f"  {name}/ensemble_q+c: {ens}", flush=True)
 
     # deployment floor: best classical on FULL features (no qubit budget).
     # The compressed twins are the fair comparison; this is the guarantee

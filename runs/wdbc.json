@@ -79,28 +79,41 @@
       "auroc": 0.9945436507936508,
       "accuracy": 0.9473684210526315,
       "spec_at_95sens": 0.9722222222222222,
-      "train_seconds": 0.16,
+      "train_seconds": 0.17,
       "conformal_qhat": 0.33333333333333337
     },
     "qsvm": {
       "auroc": 0.9950396825396826,
       "accuracy": 0.9649122807017544,
       "spec_at_95sens": 0.9861111111111112,
-      "train_seconds": 56.03,
+      "train_seconds": 56.73,
       "conformal_qhat": 0.148437348909917
+    },
+    "pqk": {
+      "auroc": 0.996031746031746,
+      "accuracy": 0.9385964912280702,
+      "spec_at_95sens": 0.9861111111111112,
+      "train_seconds": 0.31,
+      "conformal_qhat": 0.12459075155254773
     },
     "vqc": {
       "auroc": 0.9897486772486773,
       "accuracy": 0.8947368421052632,
       "spec_at_95sens": 0.9444444444444444,
-      "train_seconds": 33.26,
+      "train_seconds": 36.93,
       "conformal_qhat": 0.5133434729578172
+    },
+    "ensemble_q+c": {
+      "auroc": 0.9963624338624338,
+      "accuracy": 0.956140350877193,
+      "spec_at_95sens": 0.9861111111111112,
+      "conformal_qhat": 0.2922309548429399
     },
     "logreg_full": {
       "auroc": 0.996031746031746,
       "accuracy": 0.9649122807017544,
       "spec_at_95sens": 0.9861111111111112,
-      "train_seconds": 0.01,
+      "train_seconds": 0.0,
       "full_features": true
     },
     "svm_rbf_full": {
@@ -114,7 +127,7 @@
       "auroc": 0.9943783068783069,
       "accuracy": 0.9736842105263158,
       "spec_at_95sens": 0.9722222222222222,
-      "train_seconds": 0.21,
+      "train_seconds": 0.22,
       "full_features": true
     }
   },
