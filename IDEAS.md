@@ -2,6 +2,29 @@
 
 Running log of build epochs and PPT-worthy findings. Newest first.
 
+## Epoch 7 — the Budgeter learns to choose (2026-08-28, ~02:30)
+
+**Auto-choice compression shipped and it closed the PIMA gap.** The
+Budgeter now fits BOTH PCA and mutual-info selection, CVs a probe on each,
+and picks per dataset (both scores recorded in the JSON for transparency).
+Chosen: select on pima, pca on cleveland/wdbc — matching the experiment's
+test-set winners 3/3. PIMA compressed models jumped ~0.07: logreg 0.786,
+svm_rbf 0.806, vqc 0.802, qsvm 0.789, pqk 0.782 (floor 0.823 — gap now
+0.02-0.04, was 0.09). Patient explanations on pima now say
+glucose/age/insulin/bmi instead of "PC1". PPT line: "the platform even
+chooses how to compress your data — and shows you the runner-up score."
+
+**Scout honesty update:** under the deeper pima kernel the scout said
+"advantage_possible" but quantum only tied — so the claim is now stated
+asymmetrically: "classical_will_match" is 6/6 (never wrongly said don't
+bother); "advantage_possible" is necessary-not-sufficient (1 big win on
+quantum-native, 1 tie), and the harness always decides. No threshold was
+retro-fitted to make the record look cleaner.
+
+**Research shortlist fully executed:** PQK (win, adopted), select-vs-PCA
+(win via auto-choice), ensemble (marginal, kept), KTA training (rejected on
+evidence), re-uploading (future-work slide).
+
 ## Epoch 6 — research round 2 pays off: PQK (2026-08-28, ~01:30)
 
 **Projected quantum kernel (PQK) — the night's biggest model win.** Research
