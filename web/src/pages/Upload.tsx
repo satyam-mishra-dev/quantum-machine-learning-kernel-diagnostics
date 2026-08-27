@@ -80,6 +80,11 @@ function VerdictCard({ result }: { result: NonNullable<JobStatus['result']> }): 
         {' '}· {budget.n_qubits} qubits ({budget.method})
         {' '}· scout said {scout.quantum_worth_trying ? 'quantum worth trying' : 'no quantum edge expected'}
       </p>
+      {result.train_rows_capped && (
+        <p className="mt-1 font-mono text-[11px] text-hold">
+          trained on a {result.train_rows_used ?? 400}-row subsample to keep the quantum kernel tractable
+        </p>
+      )}
       <div className="mt-5 grid gap-x-10 sm:grid-cols-2">
         {Object.entries(heldout).map(([m, e]) => (
           <KV
@@ -126,6 +131,10 @@ export function Upload(): ReactNode {
       setError('Choose a CSV and name its target column.');
       return;
     }
+    if (file.size > 5 * 1024 * 1024) {
+      setError(`CSV is ${(file.size / 1048576).toFixed(1)} MB — uploads are capped at 5 MB.`);
+      return;
+    }
     setError(null);
     setSubmitting(true);
     setJob(null);
@@ -137,7 +146,8 @@ export function Upload(): ReactNode {
       const res = await api<{ job_id: string }>('/api/upload', { method: 'POST', body: form });
       setJobId(res.job_id);
     } catch (e) {
-      setError((e as Error).message);
+      const msg = (e as Error).message;
+      setError(/413|too large/i.test(msg) ? 'File too large — uploads are capped at 5 MB.' : msg);
     } finally {
       setSubmitting(false);
     }
@@ -201,11 +211,11 @@ export function Upload(): ReactNode {
             <span className="eyebrow">Qubit budget</span>
             <input
               type="number"
-              min={2}
-              max={16}
+              min={1}
+              max={10}
               className="mt-1.5 block h-9 w-24 rounded-sm border border-rule bg-paper px-2 font-mono text-[13px] tnum"
               value={budget}
-              onChange={(e) => setBudget(parseInt(e.target.value || '8', 10))}
+              onChange={(e) => setBudget(Math.min(10, Math.max(1, parseInt(e.target.value || '8', 10))))}
             />
           </label>
           <Button variant="quantum" onClick={() => void submit()} disabled={submitting || running}>
