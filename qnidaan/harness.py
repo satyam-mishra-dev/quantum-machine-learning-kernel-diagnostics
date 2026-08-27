@@ -128,6 +128,20 @@ def run_dataset(name, budget=8, curves=True):
         result["heldout"][mname]["conformal_qhat"] = qhats[mname]
         print(f"  {name}/{mname}: {result['heldout'][mname]}", flush=True)
 
+    # deployment floor: best classical on FULL features (no qubit budget).
+    # The compressed twins are the fair comparison; this is the guarantee
+    # that the platform never ships worse than plain classical ML.
+    from sklearn.preprocessing import StandardScaler
+
+    scaler = StandardScaler().fit(Xtr)
+    Ftr, Fte = scaler.transform(Xtr), scaler.transform(Xte)
+    for mname, model in make_twins().items():
+        full_name = f"{mname}_full"
+        result["heldout"][full_name] = _fit_eval(model, Ftr, ytr, Fte, yte)
+        result["heldout"][full_name]["full_features"] = True
+        print(f"  {name}/{full_name}: {result['heldout'][full_name]}",
+              flush=True)
+
     if curves:
         result["sample_efficiency"] = sample_efficiency(
             Ztr, ytr, Zte, yte, plan.n_qubits

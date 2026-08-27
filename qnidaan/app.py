@@ -126,7 +126,12 @@ def upload(file: UploadFile = File(...), target: str = Form(...),
     from qnidaan.datasets import load_csv
 
     raw = file.file.read()
-    X, y, meta = load_csv(io.BytesIO(raw), target)  # validate before queueing
+    try:
+        X, y, meta = load_csv(io.BytesIO(raw), target)
+    except ValueError as e:
+        raise HTTPException(422, str(e))
+    except Exception:
+        raise HTTPException(422, "could not parse file as CSV")
     job_id = uuid.uuid4().hex[:8]
     _jobs[job_id] = {"status": "running", "dataset": meta}
 
