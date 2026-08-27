@@ -25,6 +25,7 @@ export type Scout = {
   kta_classical: number;
   geometric_difference: number;
   quantum_worth_trying: boolean;
+  verdict?: string; // "advantage_possible" | "classical_will_match"
 };
 
 export type RunDetail = {

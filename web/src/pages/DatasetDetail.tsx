@@ -134,11 +134,11 @@ export function DatasetDetail(): ReactNode {
         <Card className="p-5">
           <Eyebrow className="text-quantum">Advantage scout</Eyebrow>
           <div className="mt-3">
-            {scout.quantum_worth_trying ? (
-              <Badge tone="quantum">advantage possible: yes</Badge>
-            ) : (
-              <Badge tone="neutral">advantage possible: no</Badge>
-            )}
+            <Badge tone={scout.quantum_worth_trying ? 'quantum' : 'neutral'}>
+              {scout.verdict
+                ? scout.verdict.replaceAll('_', ' ')
+                : `advantage possible: ${scout.quantum_worth_trying ? 'yes' : 'no'}`}
+            </Badge>
           </div>
           <div className="mt-3">
             <KV k="KTA (quantum kernel)" v={fmt(scout.kta_quantum)} />
