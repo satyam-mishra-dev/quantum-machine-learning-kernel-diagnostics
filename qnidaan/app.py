@@ -57,6 +57,14 @@ def datasets():
     return out
 
 
+@app.get("/api/hardware")
+def hardware():
+    out = []
+    for f in sorted(RUNS_DIR.glob("hardware_*.json")):
+        out.append(json.loads(f.read_text()))
+    return out
+
+
 @app.get("/api/runs/{name}")
 def run_detail(name: str):
     path = RUNS_DIR / f"{name}.json"
