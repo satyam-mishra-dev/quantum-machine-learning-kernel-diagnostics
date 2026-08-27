@@ -1,0 +1,26 @@
+{
+  "pima": {
+    "dataset": "pima",
+    "weights": [
+      1.5703,
+      1.5101,
+      0.8326,
+      1.1025
+    ],
+    "auroc_base": 0.7281,
+    "auroc_aligned": 0.7087,
+    "gain": -0.0194
+  },
+  "cleveland": {
+    "dataset": "cleveland",
+    "weights": [
+      1.4305,
+      0.8597,
+      0.3558,
+      1.0183
+    ],
+    "auroc_base": 0.9587,
+    "auroc_aligned": 0.9498,
+    "gain": -0.0089
+  }
+}
