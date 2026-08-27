@@ -21,7 +21,7 @@ RUNS_DIR = Path(__file__).resolve().parent.parent / "runs"
 MODELS_DIR = Path(__file__).resolve().parent.parent / "models"
 SEED = 42
 CURVE_SIZES = [30, 60, 100, 200]
-CURVE_SEEDS = [0, 1, 2]
+CURVE_SEEDS = [0, 1, 2, 3, 4]
 
 
 def _fit_eval(model, Ztr, ytr, Zte, yte):
@@ -32,35 +32,41 @@ def _fit_eval(model, Ztr, ytr, Zte, yte):
     return out
 
 
-def sample_efficiency(Ztr, ytr, Zte, yte, n_qubits, qsvm_kw=None):
-    """Accuracy/AUROC vs training-set size: QSVM vs classical twins."""
+def sample_efficiency(Xtr, ytr, Xte, yte, budget, qsvm_kw=None):
+    """AUROC vs training-set size: QSVM vs classical twins.
+
+    Preprocessing (scaler/PCA) is refit on each subset so "n_train=30"
+    means the whole pipeline saw only 30 rows — no leakage from the full
+    training split into the small-n points.
+    """
     from sklearn.linear_model import LogisticRegression
+    from sklearn.metrics import roc_auc_score
     from sklearn.svm import SVC
 
     qsvm_kw = qsvm_kw or {"C": 10, "reps": 1}
-    rng = np.random.default_rng(SEED)
     curve = []
     for size in [s for s in CURVE_SIZES if s <= len(ytr)]:
         point = {"n_train": size}
-        for name, make in {
-            "qsvm": lambda: QSVM(n_qubits=n_qubits, **qsvm_kw),
-            "logreg": lambda: LogisticRegression(max_iter=2000),
-            "svm_rbf": lambda: SVC(kernel="rbf"),
-        }.items():
-            aurocs = []
-            for seed in CURVE_SEEDS:
-                idx = _stratified_subsample(ytr, size, seed)
+        runs = {"qsvm": [], "logreg": [], "svm_rbf": []}
+        for seed in CURVE_SEEDS:
+            idx = _stratified_subsample(ytr, size, seed)
+            plan = fit_budget(Xtr[idx], budget=budget)
+            Zs, Zte_s = plan.transform(Xtr[idx]), plan.transform(Xte)
+            for name, make in {
+                "qsvm": lambda: QSVM(n_qubits=plan.n_qubits, **qsvm_kw),
+                "logreg": lambda: LogisticRegression(max_iter=2000),
+                "svm_rbf": lambda: SVC(kernel="rbf"),
+            }.items():
                 m = make()
-                m.fit(Ztr[idx], ytr[idx])
-                if hasattr(m, "predict_proba"):
-                    score = m.predict_proba(Zte)[:, 1]
-                else:
-                    score = m.decision_function(Zte)
-                from sklearn.metrics import roc_auc_score
-                aurocs.append(roc_auc_score(yte, score))
+                m.fit(Zs, ytr[idx])
+                score = (m.predict_proba(Zte_s)[:, 1]
+                         if hasattr(m, "predict_proba")
+                         else m.decision_function(Zte_s))
+                runs[name].append(roc_auc_score(yte, score))
+        for name, aurocs in runs.items():
             point[name] = {
                 "auroc_mean": float(np.mean(aurocs)),
-                "auroc_std": float(np.std(aurocs)),
+                "auroc_std": float(np.std(aurocs, ddof=1)),
             }
         curve.append(point)
     return curve
@@ -91,8 +97,18 @@ def run_dataset(name, budget=8, curves=True):
     if tuned:
         budget = tuned["budget"]
         qsvm_kw = {"C": tuned["C"], "reps": tuned["reps"]}
-    plan = fit_budget(Xtr, budget=budget)
-    Ztr, Zte = plan.transform(Xtr), plan.transform(Xte)
+    # calibration rows are carved out BEFORE any preprocessing is fit, so
+    # the budgeter never sees them — keeps split conformal exchangeable
+    from sklearn.model_selection import train_test_split
+
+    from qnidaan.report import fit_conformal
+
+    Xfit, Xcal, yfit, ycal = train_test_split(
+        Xtr, ytr, test_size=0.2, random_state=SEED, stratify=ytr
+    )
+    plan = fit_budget(Xfit, budget=budget)
+    Zfit, Zcal, Zte = (plan.transform(Xfit), plan.transform(Xcal),
+                       plan.transform(Xte))
 
     result = {
         "dataset": meta,
@@ -104,21 +120,12 @@ def run_dataset(name, budget=8, curves=True):
     }
 
     kernel = make_kernel(plan.n_qubits, qsvm_kw["reps"])
-    result["scout"] = scout(Ztr, ytr, kernel)
-
-    # split conformal needs calibration data the model never trained on
-    from sklearn.model_selection import train_test_split
-
-    from qnidaan.report import fit_conformal
-
-    Zfit, Zcal, yfit, ycal = train_test_split(
-        Ztr, ytr, test_size=0.2, random_state=SEED, stratify=ytr
-    )
+    result["scout"] = scout(Zfit, yfit, kernel)
 
     models = {
         **make_twins(),
         "qsvm": QSVM(n_qubits=plan.n_qubits, **qsvm_kw),
-        "vqc": VQC(n_qubits=plan.n_qubits, epochs=60),
+        "vqc": VQC(n_qubits=plan.n_qubits, epochs=30),
     }
     result["qsvm_config"] = {"tuned": bool(tuned), **qsvm_kw}
     result["heldout"] = {}
@@ -145,7 +152,7 @@ def run_dataset(name, budget=8, curves=True):
 
     if curves:
         result["sample_efficiency"] = sample_efficiency(
-            Ztr, ytr, Zte, yte, plan.n_qubits, qsvm_kw
+            Xtr, ytr, Xte, yte, budget, qsvm_kw
         )
 
     import joblib
