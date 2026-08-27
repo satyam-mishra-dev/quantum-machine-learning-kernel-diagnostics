@@ -62,22 +62,35 @@
       "auroc": 0.9436383928571428,
       "accuracy": 0.8833333333333333,
       "spec_at_95sens": 0.625,
-      "train_seconds": 0.14,
+      "train_seconds": 0.15,
       "conformal_qhat": 0.8633333333333333
     },
     "qsvm": {
       "auroc": 0.9553571428571428,
       "accuracy": 0.85,
       "spec_at_95sens": 0.6875,
-      "train_seconds": 14.72,
+      "train_seconds": 15.55,
       "conformal_qhat": 0.8574835056761911
+    },
+    "pqk": {
+      "auroc": 0.9654017857142857,
+      "accuracy": 0.9,
+      "spec_at_95sens": 0.78125,
+      "train_seconds": 0.17,
+      "conformal_qhat": 0.7622033122727909
     },
     "vqc": {
       "auroc": 0.9564732142857143,
       "accuracy": 0.8666666666666667,
       "spec_at_95sens": 0.75,
-      "train_seconds": 17.3,
+      "train_seconds": 18.69,
       "conformal_qhat": 0.6885216494069958
+    },
+    "ensemble_q+c": {
+      "auroc": 0.9564732142857142,
+      "accuracy": 0.9166666666666666,
+      "spec_at_95sens": 0.6875,
+      "conformal_qhat": 0.7614559103377604
     },
     "logreg_full": {
       "auroc": 0.9497767857142857,
@@ -97,7 +110,7 @@
       "auroc": 0.9430803571428571,
       "accuracy": 0.8666666666666667,
       "spec_at_95sens": 0.75,
-      "train_seconds": 0.14,
+      "train_seconds": 0.15,
       "full_features": true
     }
   },
