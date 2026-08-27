@@ -102,7 +102,7 @@ def run_dataset(name, budget=8, curves=True):
         },
     }
 
-    kernel = make_kernel(plan.n_qubits)
+    kernel = make_kernel(plan.n_qubits, qsvm_kw["reps"])
     result["scout"] = scout(Ztr, ytr, kernel)
 
     # split conformal needs calibration data the model never trained on
