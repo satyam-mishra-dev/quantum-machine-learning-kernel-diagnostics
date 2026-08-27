@@ -52,7 +52,10 @@ def datasets():
             "best_model": best,
             "best_auroc": r["heldout"][best]["auroc"],
             "qsvm_auroc": r["heldout"].get("qsvm", {}).get("auroc"),
-            "quantum_worth_trying": r["scout"]["quantum_worth_trying"],
+            "quantum_worth_trying": r.get("scout", {}).get(
+                "quantum_worth_trying"),
+            "scout_verdict": r.get("scout", {}).get("verdict"),
+            "image_track": r.get("image_track", False),
         })
     return out
 
