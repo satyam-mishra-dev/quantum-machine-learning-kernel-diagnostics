@@ -1,0 +1,74 @@
+{
+  "ILPD": {
+    "source_url": "https://archive.ics.uci.edu/dataset/225/ilpd+indian+liver+patient+dataset",
+    "transform_notes": "no header in raw file (added); Gender Male=1/Female=0; Selector 1/2 -> target 1/0; dropped 4 rows with missing AG_Ratio (583->579)",
+    "n": {
+      "n_samples": 579,
+      "n_features": 10,
+      "train_rows_used": 400,
+      "train_rows_capped": true
+    },
+    "scout_verdict": "classical_will_match",
+    "g_ratio": 0.30885783377475196,
+    "heldout": {
+      "logreg": 0.7594,
+      "svm_rbf": 0.6787,
+      "random_forest": 0.6972,
+      "qsvm": 0.617
+    },
+    "verdict": {
+      "best_model": "logreg",
+      "quantum_won": false,
+      "qsvm_vs_best_classical": -0.1424
+    },
+    "elapsed_min": 2.0
+  },
+  "heart_failure": {
+    "source_url": "https://archive.ics.uci.edu/dataset/519/heart+failure+clinical+records",
+    "transform_notes": "used as-is",
+    "n": {
+      "n_samples": 299,
+      "n_features": 12,
+      "train_rows_used": 239,
+      "train_rows_capped": false
+    },
+    "scout_verdict": "classical_will_match",
+    "g_ratio": 0.38115970178595293,
+    "heldout": {
+      "logreg": 0.8524,
+      "svm_rbf": 0.8318,
+      "random_forest": 0.8177,
+      "qsvm": 0.7086
+    },
+    "verdict": {
+      "best_model": "logreg",
+      "quantum_won": false,
+      "qsvm_vs_best_classical": -0.1438
+    },
+    "elapsed_min": 1.0
+  },
+  "parkinsons": {
+    "source_url": "https://archive.ics.uci.edu/ml/machine-learning-databases/parkinsons/parkinsons.data",
+    "transform_notes": "dropped 'name' column",
+    "n": {
+      "n_samples": 195,
+      "n_features": 22,
+      "train_rows_used": 156,
+      "train_rows_capped": false
+    },
+    "scout_verdict": "classical_will_match",
+    "g_ratio": 0.3788140492461873,
+    "heldout": {
+      "logreg": 0.9207,
+      "svm_rbf": 0.9207,
+      "random_forest": 0.9897,
+      "qsvm": 0.9966
+    },
+    "verdict": {
+      "best_model": "qsvm",
+      "quantum_won": true,
+      "qsvm_vs_best_classical": 0.0069
+    },
+    "elapsed_min": 0.5
+  }
+}

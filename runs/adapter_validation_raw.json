@@ -1,0 +1,238 @@
+{
+  "ILPD": {
+    "source_url": "https://archive.ics.uci.edu/dataset/225/ilpd+indian+liver+patient+dataset",
+    "transform_notes": "no header in raw file (added); Gender Male=1/Female=0; Selector 1/2 -> target 1/0; dropped 4 rows with missing AG_Ratio (583->579)",
+    "raw": {
+      "status": "done",
+      "dataset": {
+        "name": "custom",
+        "title": "Uploaded dataset",
+        "n_features": 10,
+        "feature_names": [
+          "Age",
+          "Gender",
+          "TB",
+          "DB",
+          "Alkphos",
+          "Sgpt",
+          "Sgot",
+          "TP",
+          "ALB",
+          "AG_Ratio"
+        ],
+        "dropped_non_numeric": [],
+        "positive_class": "1"
+      },
+      "result": {
+        "budget": {
+          "n_qubits": 8,
+          "method": "pca",
+          "explained_variance": 0.992566224985126
+        },
+        "scout": {
+          "n_scouted": 100,
+          "kta_quantum": 0.13172799649993733,
+          "kta_classical": 0.1912525174950855,
+          "g_asym": 3.0885783377475193,
+          "g_huang_naive_reg": 5.440602301256437,
+          "g_threshold_sqrt_n": 10.0,
+          "g_ratio": 0.30885783377475196,
+          "verdict": "classical_will_match",
+          "quantum_worth_trying": false
+        },
+        "heldout": {
+          "logreg": {
+            "auroc": 0.7594012413289523,
+            "accuracy": 0.7068965517241379,
+            "spec_at_95sens": 0.09090909090909094
+          },
+          "svm_rbf": {
+            "auroc": 0.678714859437751,
+            "accuracy": 0.7155172413793104,
+            "spec_at_95sens": 0.12121212121212122
+          },
+          "random_forest": {
+            "auroc": 0.6971522453450165,
+            "accuracy": 0.7068965517241379,
+            "spec_at_95sens": 0.12121212121212122
+          },
+          "qsvm": {
+            "auroc": 0.6170135085797737,
+            "accuracy": 0.7068965517241379,
+            "spec_at_95sens": 0.09090909090909094
+          }
+        },
+        "train_rows_used": 400,
+        "train_rows_capped": true,
+        "verdict": {
+          "best_model": "logreg",
+          "quantum_won": false,
+          "qsvm_vs_best_classical": -0.1424
+        }
+      },
+      "_elapsed_min": 2.0
+    }
+  },
+  "heart_failure": {
+    "source_url": "https://archive.ics.uci.edu/dataset/519/heart+failure+clinical+records",
+    "transform_notes": "used as-is",
+    "raw": {
+      "status": "done",
+      "dataset": {
+        "name": "custom",
+        "title": "Uploaded dataset",
+        "n_features": 12,
+        "feature_names": [
+          "age",
+          "anaemia",
+          "creatinine_phosphokinase",
+          "diabetes",
+          "ejection_fraction",
+          "high_blood_pressure",
+          "platelets",
+          "serum_creatinine",
+          "serum_sodium",
+          "sex",
+          "smoking",
+          "time"
+        ],
+        "dropped_non_numeric": [],
+        "positive_class": "1"
+      },
+      "result": {
+        "budget": {
+          "n_qubits": 8,
+          "method": "pca",
+          "explained_variance": 0.7860951395020284
+        },
+        "scout": {
+          "n_scouted": 100,
+          "kta_quantum": 0.16680717069303552,
+          "kta_classical": 0.16412323406216142,
+          "g_asym": 3.8115970178595293,
+          "g_huang_naive_reg": 4.434489550590443,
+          "g_threshold_sqrt_n": 10.0,
+          "g_ratio": 0.38115970178595293,
+          "verdict": "classical_will_match",
+          "quantum_worth_trying": false
+        },
+        "heldout": {
+          "logreg": {
+            "auroc": 0.8523748395378691,
+            "accuracy": 0.7666666666666667,
+            "spec_at_95sens": 0.6097560975609756
+          },
+          "svm_rbf": {
+            "auroc": 0.8318356867779204,
+            "accuracy": 0.75,
+            "spec_at_95sens": 0.5365853658536586
+          },
+          "random_forest": {
+            "auroc": 0.8177150192554556,
+            "accuracy": 0.7166666666666667,
+            "spec_at_95sens": 0.29268292682926833
+          },
+          "qsvm": {
+            "auroc": 0.7086007702182284,
+            "accuracy": 0.7,
+            "spec_at_95sens": 0.2682926829268293
+          }
+        },
+        "train_rows_used": 239,
+        "train_rows_capped": false,
+        "verdict": {
+          "best_model": "logreg",
+          "quantum_won": false,
+          "qsvm_vs_best_classical": -0.1438
+        }
+      },
+      "_elapsed_min": 1.0
+    }
+  },
+  "parkinsons": {
+    "source_url": "https://archive.ics.uci.edu/ml/machine-learning-databases/parkinsons/parkinsons.data",
+    "transform_notes": "dropped 'name' column",
+    "raw": {
+      "status": "done",
+      "dataset": {
+        "name": "custom",
+        "title": "Uploaded dataset",
+        "n_features": 22,
+        "feature_names": [
+          "MDVP:Fo(Hz)",
+          "MDVP:Fhi(Hz)",
+          "MDVP:Flo(Hz)",
+          "MDVP:Jitter(%)",
+          "MDVP:Jitter(Abs)",
+          "MDVP:RAP",
+          "MDVP:PPQ",
+          "Jitter:DDP",
+          "MDVP:Shimmer",
+          "MDVP:Shimmer(dB)",
+          "Shimmer:APQ3",
+          "Shimmer:APQ5",
+          "MDVP:APQ",
+          "Shimmer:DDA",
+          "NHR",
+          "HNR",
+          "RPDE",
+          "DFA",
+          "spread1",
+          "spread2",
+          "D2",
+          "PPE"
+        ],
+        "dropped_non_numeric": [],
+        "positive_class": "1"
+      },
+      "result": {
+        "budget": {
+          "n_qubits": 8,
+          "method": "pca",
+          "explained_variance": 0.9597967208826785
+        },
+        "scout": {
+          "n_scouted": 100,
+          "kta_quantum": 0.16157995857564691,
+          "kta_classical": 0.23082637195345135,
+          "g_asym": 3.788140492461873,
+          "g_huang_naive_reg": 4.20569679271312,
+          "g_threshold_sqrt_n": 10.0,
+          "g_ratio": 0.3788140492461873,
+          "verdict": "classical_will_match",
+          "quantum_worth_trying": false
+        },
+        "heldout": {
+          "logreg": {
+            "auroc": 0.9206896551724139,
+            "accuracy": 0.8717948717948718,
+            "spec_at_95sens": 0.7
+          },
+          "svm_rbf": {
+            "auroc": 0.9206896551724137,
+            "accuracy": 0.8974358974358975,
+            "spec_at_95sens": 0.7
+          },
+          "random_forest": {
+            "auroc": 0.9896551724137932,
+            "accuracy": 0.9230769230769231,
+            "spec_at_95sens": 0.9
+          },
+          "qsvm": {
+            "auroc": 0.996551724137931,
+            "accuracy": 0.9743589743589743,
+            "spec_at_95sens": 1.0
+          }
+        },
+        "train_rows_used": 156,
+        "train_rows_capped": false,
+        "verdict": {
+          "best_model": "qsvm",
+          "quantum_won": true,
+          "qsvm_vs_best_classical": 0.0069
+        }
+      },
+      "_elapsed_min": 0.5
+    }
+  }
+}
