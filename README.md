@@ -15,8 +15,8 @@ model (the never-ship-worse baseline).
 
 | Dataset | Best quantum | Best classical | Full-feature floor |
 |---|---|---|---|
-| WDBC breast cancer | 0.995 (QSVM) | 0.996 (SVM-RBF) | 0.996 (logreg) |
-| Cleveland heart disease | 0.956 (VQC) | 0.961 (logreg) | 0.955 (SVM-RBF) |
+| WDBC breast cancer | 0.996 (PQK) | 0.996 (SVM-RBF) | 0.996 (logreg) |
+| Cleveland heart disease | 0.965 (PQK) | 0.961 (logreg) | 0.955 (SVM-RBF) |
 | Pima diabetes | 0.802 (VQC) | 0.806 (SVM-RBF) | 0.823 (logreg) |
 | Quantum-native synthetic | 0.972 (QSVM) | 0.743 (random forest) | 0.766 (random forest) |
 | PneumoniaMNIST X-rays | 0.939 (hybrid QNN) | 0.925 (matched CNN) | — (image track) |
