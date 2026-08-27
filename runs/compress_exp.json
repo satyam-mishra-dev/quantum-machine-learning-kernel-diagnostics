@@ -1,0 +1,62 @@
+{
+  "pima": {
+    "pca": {
+      "logreg": 0.732,
+      "svm_rbf": 0.7246,
+      "qsvm": 0.7115,
+      "pqk": 0.7172
+    },
+    "select": {
+      "logreg": 0.7859,
+      "svm_rbf": 0.8059,
+      "qsvm": 0.7889,
+      "pqk": 0.782
+    },
+    "selected_features": [
+      "glucose",
+      "insulin",
+      "bmi",
+      "age"
+    ]
+  },
+  "cleveland": {
+    "pca": {
+      "logreg": 0.9609,
+      "svm_rbf": 0.9576,
+      "qsvm": 0.9554,
+      "pqk": 0.9654
+    },
+    "select": {
+      "logreg": 0.9414,
+      "svm_rbf": 0.9258,
+      "qsvm": 0.9046,
+      "pqk": 0.8566
+    },
+    "selected_features": [
+      "cp",
+      "oldpeak",
+      "ca",
+      "thal"
+    ]
+  },
+  "wdbc": {
+    "pca": {
+      "logreg": 0.9957,
+      "svm_rbf": 0.996,
+      "qsvm": 0.995,
+      "pqk": 0.996
+    },
+    "select": {
+      "logreg": 0.9917,
+      "svm_rbf": 0.9911,
+      "qsvm": 0.9911,
+      "pqk": 0.9911
+    },
+    "selected_features": [
+      "mean concave points",
+      "worst radius",
+      "worst perimeter",
+      "worst area"
+    ]
+  }
+}
