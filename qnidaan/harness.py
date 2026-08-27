@@ -76,8 +76,20 @@ def _stratified_subsample(y, size, seed):
     return np.array(idx)
 
 
+def _tuned_config(name):
+    path = RUNS_DIR / "tuned.json"
+    if path.exists():
+        return json.loads(path.read_text()).get(name)
+    return None
+
+
 def run_dataset(name, budget=8, curves=True):
     Xtr, Xte, ytr, yte, meta = load_split(name)
+    tuned = _tuned_config(name)
+    qsvm_kw = {"C": 10, "reps": 1}
+    if tuned:
+        budget = tuned["budget"]
+        qsvm_kw = {"C": tuned["C"], "reps": tuned["reps"]}
     plan = fit_budget(Xtr, budget=budget)
     Ztr, Zte = plan.transform(Xtr), plan.transform(Xte)
 
@@ -104,9 +116,10 @@ def run_dataset(name, budget=8, curves=True):
 
     models = {
         **make_twins(),
-        "qsvm": QSVM(n_qubits=plan.n_qubits, C=10),
+        "qsvm": QSVM(n_qubits=plan.n_qubits, **qsvm_kw),
         "vqc": VQC(n_qubits=plan.n_qubits, epochs=60),
     }
+    result["qsvm_config"] = {"tuned": bool(tuned), **qsvm_kw}
     result["heldout"] = {}
     qhats = {}
     for mname, model in models.items():
