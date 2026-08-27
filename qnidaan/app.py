@@ -16,7 +16,13 @@ from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from qnidaan.harness import MODELS_DIR, RUNS_DIR
+import __main__ as _main
+
+from qnidaan.harness import MODELS_DIR, RUNS_DIR, SoftVote
+
+_main.SoftVote = SoftVote  # bundles pickled by `python -m qnidaan.harness`
+                           # reference __main__.SoftVote; alias it so
+                           # joblib.load resolves outside the harness
 from qnidaan.report import patient_report
 
 app = FastAPI(title="Q-Nidaan")
@@ -96,6 +102,8 @@ def feature_schema(name: str):
 
 def _component_labels(plan, names):
     """Human-readable labels: name PCA components by their top loadings."""
+    if plan.method == "select":
+        return [names[i] for i in plan.selected_features]
     if plan.method != "pca":
         return names
     pca = plan.pipeline.named_steps["pca"]
@@ -165,7 +173,7 @@ def _run_adapter(X, y, meta, budget, job):
     """Universal adapter: the same pipeline the flagships went through."""
     from sklearn.model_selection import train_test_split
 
-    from qnidaan.budgeter import fit_budget
+    from qnidaan.budgeter import fit_budget_auto
     from qnidaan.classical import evaluate, make_twins
     from qnidaan.quantum import PQK, QSVM, make_kernel
     from qnidaan.scout import scout
@@ -178,13 +186,15 @@ def _run_adapter(X, y, meta, budget, job):
         idx = rng.permutation(len(Xtr))[:600]
         Xtr, ytr = Xtr[idx], ytr[idx]
     job["stage"] = "qubit_budget"
-    plan = fit_budget(Xtr, budget=budget)
+    plan = fit_budget_auto(Xtr, ytr, budget)
     Ztr, Zte = plan.transform(Xtr), plan.transform(Xte)
     kernel = make_kernel(plan.n_qubits)
     job["stage"] = "advantage_scout"
     out = {
         "budget": {"n_qubits": plan.n_qubits, "method": plan.method,
-                   "explained_variance": plan.explained_variance},
+                   "explained_variance": plan.explained_variance,
+                   "cv_auroc": plan.cv_auroc,
+                   "runner_up_cv_auroc": plan.runner_up_cv_auroc},
         "scout": scout(Ztr, ytr, kernel),
         "heldout": {},
         "train_rows_used": int(len(ytr)),

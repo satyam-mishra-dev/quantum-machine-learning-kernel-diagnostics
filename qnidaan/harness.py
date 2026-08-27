@@ -11,7 +11,7 @@ from pathlib import Path
 
 import numpy as np
 
-from qnidaan.budgeter import fit_budget
+from qnidaan.budgeter import fit_budget_auto
 from qnidaan.classical import evaluate, make_twins
 from qnidaan.datasets import load_split
 from qnidaan.quantum import PQK, QSVM, VQC, make_kernel
@@ -60,7 +60,7 @@ def sample_efficiency(Xtr, ytr, Xte, yte, budget, qsvm_kw=None):
         runs = {"qsvm": [], "logreg": [], "svm_rbf": []}
         for seed in CURVE_SEEDS:
             idx = _stratified_subsample(ytr, size, seed)
-            plan = fit_budget(Xtr[idx], budget=budget)
+            plan = fit_budget_auto(Xtr[idx], ytr[idx], budget)
             Zs, Zte_s = plan.transform(Xtr[idx]), plan.transform(Xte)
             for name, make in {
                 "qsvm": lambda: QSVM(n_qubits=plan.n_qubits, **qsvm_kw),
@@ -116,7 +116,7 @@ def run_dataset(name, budget=8, curves=True):
     Xfit, Xcal, yfit, ycal = train_test_split(
         Xtr, ytr, test_size=0.2, random_state=SEED, stratify=ytr
     )
-    plan = fit_budget(Xfit, budget=budget)
+    plan = fit_budget_auto(Xfit, yfit, budget)
     Zfit, Zcal, Zte = (plan.transform(Xfit), plan.transform(Xcal),
                        plan.transform(Xte))
 
@@ -126,6 +126,8 @@ def run_dataset(name, budget=8, curves=True):
             "n_qubits": plan.n_qubits,
             "method": plan.method,
             "explained_variance": plan.explained_variance,
+            "cv_auroc": plan.cv_auroc,
+            "runner_up_cv_auroc": plan.runner_up_cv_auroc,
         },
     }
 

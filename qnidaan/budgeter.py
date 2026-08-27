@@ -21,6 +21,8 @@ class BudgetPlan:
     explained_variance: float | None = None
     pipeline: Pipeline = field(default=None, repr=False)
     selected_features: list | None = None  # "select" only
+    cv_auroc: float | None = None            # auto mode: winner's CV score
+    runner_up_cv_auroc: float | None = None  # auto mode: loser's CV score
 
     def transform(self, X):
         return self.pipeline.transform(X)
@@ -54,6 +56,33 @@ def fit_budget(X_train, budget: int = 8, y=None,
     return BudgetPlan(d, budget, "pca", ev, pipe)
 
 
+def fit_budget_auto(X_train, y, budget: int = 8) -> BudgetPlan:
+    """Fit both pca and select plans, keep whichever CV-scores higher.
+
+    Scored by 5-fold StratifiedKFold AUROC of LogisticRegression on the
+    transformed training data (ties go to pca). d <= budget is just "scale".
+    """
+    if X_train.shape[1] <= budget:
+        return fit_budget(X_train, budget)
+    from sklearn.linear_model import LogisticRegression
+    from sklearn.model_selection import StratifiedKFold, cross_val_score
+
+    cv = StratifiedKFold(5, shuffle=True, random_state=0)
+    plans, scores = {}, {}
+    for method in ("pca", "select"):
+        plans[method] = fit_budget(X_train, budget, y=y, method=method)
+        scores[method] = float(np.mean(cross_val_score(
+            LogisticRegression(max_iter=2000),
+            plans[method].transform(X_train), y,
+            cv=cv, scoring="roc_auc")))
+    winner = "select" if scores["select"] > scores["pca"] else "pca"
+    plan = plans[winner]
+    plan.cv_auroc = round(scores[winner], 4)
+    plan.runner_up_cv_auroc = round(
+        scores["pca" if winner == "select" else "select"], 4)
+    return plan
+
+
 if __name__ == "__main__":
     rng = np.random.default_rng(0)
     X = rng.normal(size=(100, 30))
@@ -74,5 +103,13 @@ if __name__ == "__main__":
         raise AssertionError("select without y should raise")
     except ValueError:
         pass
+    auto = fit_budget_auto(X, y, budget=8)
+    assert auto.method in ("pca", "select")
+    assert auto.cv_auroc is not None and auto.runner_up_cv_auroc is not None
+    assert auto.cv_auroc >= auto.runner_up_cv_auroc
+    assert auto.transform(X).shape == (100, 8)
+    auto_small = fit_budget_auto(X[:, :5], y, budget=8)
+    assert auto_small.method == "scale" and auto_small.cv_auroc is None
     print(f"budgeter OK (pca kept {plan.explained_variance:.0%} variance, "
-          f"select kept {sel.selected_features})")
+          f"select kept {sel.selected_features}, auto chose {auto.method} "
+          f"cv={auto.cv_auroc} vs {auto.runner_up_cv_auroc})")
