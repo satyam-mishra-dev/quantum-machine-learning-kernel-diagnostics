@@ -8,7 +8,7 @@ import {
 } from '../lib/api';
 import { AXIS_TICK, SHAP_DOWN, SHAP_UP, TOOLTIP_STYLE } from '../lib/chart';
 import { SAMPLE_PATIENTS } from '../lib/samples';
-import { Badge, Button, Card, ErrorState, Eyebrow, PageTitle, Skeleton } from '../components/ui';
+import { Badge, Button, Card, ErrorState, Eyebrow, PageTitle, Skeleton , ColdStartNote } from '../components/ui';
 
 const MODELS = ['qsvm', 'vqc', 'logreg', 'svm_rbf', 'random_forest'];
 
@@ -189,7 +189,12 @@ export function PatientCheck(): ReactNode {
       </p>
 
       {dsError && <ErrorState>Could not reach the API ({dsError}).</ErrorState>}
-      {dsLoading && <Skeleton className="mt-6 h-40" />}
+      {dsLoading && (
+        <>
+          <Skeleton className="mt-6 h-40" />
+          <ColdStartNote />
+        </>
+      )}
 
       {datasets && (
         <Card className="mt-6 p-5">

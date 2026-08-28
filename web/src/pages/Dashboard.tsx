@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { MODEL_LABELS, useApi, type DatasetCard } from '../lib/api';
-import { Badge, Card, ErrorState, Eyebrow, PageTitle, Skeleton } from '../components/ui';
+import { Badge, Card, ErrorState, Eyebrow, PageTitle, Skeleton , ColdStartNote } from '../components/ui';
 import { CountUp, Reveal } from '../components/motion';
 import { HardwareSection } from '../components/Hardware';
 
@@ -78,6 +78,7 @@ export function Dashboard(): ReactNode {
             {[0, 1, 2].map((i) => (
               <Skeleton key={i} className="h-56" />
             ))}
+            <ColdStartNote />
           </div>
         )}
         {error && (
