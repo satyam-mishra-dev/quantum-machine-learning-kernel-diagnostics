@@ -36,7 +36,7 @@ function Shell({ children }: { children: ReactNode }): ReactNode {
         <div className="mx-auto flex max-w-6xl items-center gap-4 px-4 py-2.5">
           <NavLink to="/" className="flex items-center gap-2 text-ink">
             <BrandMark />
-            <span className="font-serif text-[17px] font-semibold tracking-tight">Q-Nidaan</span>
+            <span className="font-serif text-[17px] font-semibold tracking-tight">QuantumFloor</span>
           </NavLink>
           <nav className="ml-2 flex items-center gap-0.5" aria-label="Primary">
             {NAV.map((item) => (
@@ -62,7 +62,7 @@ function Shell({ children }: { children: ReactNode }): ReactNode {
 
       <footer className="border-t border-rule">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2 px-4 py-4 font-mono text-[11px] text-ink-45">
-          <span>Q-Nidaan · honest quantum ML for early disease detection</span>
+          <span>QuantumFloor · honest quantum ML for early disease detection</span>
           <span>Built for Smart India Hackathon 2026 · runs on IBM Quantum hardware</span>
         </div>
       </footer>

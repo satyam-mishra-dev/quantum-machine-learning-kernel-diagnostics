@@ -82,7 +82,7 @@ export function Landing(): ReactNode {
         <div className="max-w-2xl">
           <div className="hero-item eyebrow">SIH 2026 · Hybrid quantum–classical ML</div>
           <h1 className="hero-item mt-3 font-serif text-[42px] leading-[1.05] font-semibold text-ink sm:text-[56px]">
-            <span className="q-gradient-text">Q-Nidaan</span>
+            <span className="q-gradient-text">QuantumFloor</span>
           </h1>
           <div className="hero-rule q-gradient-rule mt-4 w-24" />
           <p className="hero-item mt-5 text-[17px] leading-relaxed text-ink-60 sm:text-lg">
@@ -123,7 +123,7 @@ export function Landing(): ReactNode {
           <div className="q-gradient-border p-6 sm:p-8">
             <Eyebrow className="text-quantum">The honesty principle</Eyebrow>
             <p className="mt-3 max-w-3xl font-serif text-xl leading-relaxed text-ink sm:text-2xl">
-              Most "quantum ML for healthcare" demos hide the classical baseline. Q-Nidaan trains
+              Most "quantum ML for healthcare" demos hide the classical baseline. QuantumFloor trains
               it, publishes it, and tells you when quantum <em>lost</em>. That is the only way a
               quantum advantage claim means anything.
             </p>
