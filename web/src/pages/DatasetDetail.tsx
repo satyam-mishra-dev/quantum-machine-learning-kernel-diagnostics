@@ -6,7 +6,7 @@ import {
 } from 'recharts';
 import { isFullFloor, isQuantum, MODEL_LABELS, useApi, type RunDetail } from '../lib/api';
 import { AXIS_TICK, CLASSICAL_BAR, QUANTUM_BAR, SERIES_COLORS, TOOLTIP_STYLE } from '../lib/chart';
-import { Badge, buttonClass, Card, ErrorState, Eyebrow, KV, PageTitle, Skeleton } from '../components/ui';
+import { Badge, buttonClass, Card, ErrorState, Eyebrow, KV, PageTitle, Skeleton , ColdStartNote } from '../components/ui';
 import { Reveal } from '../components/motion';
 
 const fmt = (v: number | null | undefined, d = 3): string => (v == null ? '—' : v.toFixed(d));
@@ -118,7 +118,13 @@ export function DatasetDetail(): ReactNode {
   const { name } = useParams();
   const { data, error, loading } = useApi<RunDetail>(name ? `/api/runs/${name}` : null);
 
-  if (loading) return <Skeleton className="h-96" />;
+  if (loading)
+    return (
+      <>
+        <Skeleton className="h-96" />
+        <ColdStartNote />
+      </>
+    );
   if (error) return <ErrorState>Could not load run for “{name}” ({error}).</ErrorState>;
   if (!data) return null;
 

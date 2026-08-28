@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import clsx from 'clsx';
 import gsap from 'gsap';
 import { api, MODEL_LABELS, isQuantum, type JobStatus } from '../lib/api';
-import { Badge, Button, Card, ErrorState, Eyebrow, KV, PageTitle } from '../components/ui';
+import { Badge, Button, Card, ColdStartNote, ErrorState, Eyebrow, KV, PageTitle } from '../components/ui';
 
 const STAGES = ['Ingest', 'Qubit budget', 'Advantage scout', 'Train quantum + classical twins', 'Verdict'];
 
@@ -227,6 +227,12 @@ export function Upload(): ReactNode {
             {submitting ? 'Uploading…' : 'Run the pipeline'}
           </Button>
         </div>
+
+        <ColdStartNote>
+          This trains a quantum kernel live on Render's free tier (0.1 CPU), so
+          a run takes 10-15 minutes — and if the backend has been idle, add
+          about a minute for it to wake up first.
+        </ColdStartNote>
 
         {error && (
           <div className="mt-4">

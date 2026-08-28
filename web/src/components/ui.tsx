@@ -99,3 +99,19 @@ export function KV({ k, v }: { k: ReactNode; v: ReactNode }): ReactNode {
     </div>
   );
 }
+
+/** Render free tier sleeps after 15 min idle and wakes in ~50s. Say so
+ *  wherever a page waits on the API, so a cold start doesn't read as broken. */
+export function ColdStartNote({ children }: { children?: ReactNode }): ReactNode {
+  return (
+    <p className="mt-3 text-[12px] leading-relaxed text-ink/55">
+      {children ?? (
+        <>
+          The backend runs on Render's free tier — if it has been idle it needs
+          about a minute to wake up, so the first request can be slow. Later
+          ones are quick.
+        </>
+      )}
+    </p>
+  );
+}
