@@ -1,0 +1,12 @@
+# Serving only. Training/imaging deps (torch, medmnist, qiskit, optuna,
+# matplotlib, MAPIE) live in requirements.txt and are not imported by
+# qnidaan/app.py — keeping them out fits Render's free 512MB box.
+fastapi==0.141.1
+uvicorn==0.52.4
+python-multipart==0.0.32
+joblib==1.5.3
+numpy==2.5.2
+pandas==3.0.5
+scikit-learn==1.9.0
+pennylane==0.45.1
+shap==0.52.0
