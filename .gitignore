@@ -21,3 +21,6 @@ dist/
 
 # artifacts
 .DS_Store
+
+# sample CSVs shipped to the frontend for the upload demo
+!web/public/samples/*.csv
