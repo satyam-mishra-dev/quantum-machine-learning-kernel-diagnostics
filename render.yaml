@@ -8,18 +8,3 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: "3.12"
-
-  # Keeps the free web service from idling out (spindown is 15 min of no
-  # inbound traffic). Render cron jobs are not on the free plan — see notes.
-  - type: cron
-    name: q-nidaan-keepalive
-    runtime: python
-    plan: starter
-    schedule: "*/2 * * * *"
-    buildCommand: echo no-deps
-    startCommand: >-
-      python -c "import urllib.request as u;
-      u.urlopen('https://q-nidaan-api.onrender.com/api/datasets', timeout=60)"
-    envVars:
-      - key: PYTHON_VERSION
-        value: "3.12"
