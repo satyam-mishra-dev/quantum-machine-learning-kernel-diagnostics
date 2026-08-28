@@ -83,7 +83,7 @@ export function Dashboard(): ReactNode {
         )}
         {error && (
           <ErrorState>
-            Could not reach the Q-Nidaan API ({error}). Start the backend on :8000 and reload.
+            Could not reach the QuantumFloor API ({error}). Start the backend on :8000 and reload.
           </ErrorState>
         )}
         {data && (
