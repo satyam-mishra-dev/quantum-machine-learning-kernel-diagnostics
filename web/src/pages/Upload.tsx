@@ -4,6 +4,16 @@ import gsap from 'gsap';
 import { api, MODEL_LABELS, isQuantum, type JobStatus } from '../lib/api';
 import { Badge, Button, Card, ColdStartNote, ErrorState, Eyebrow, KV, PageTitle } from '../components/ui';
 
+/** Shipped in web/public/samples/. Every one is verified to parse through
+    qnidaan.datasets.load_csv with the target column named here. Cleveland and
+    Pima are deliberately absent: those CSVs are headerless, so the adapter
+    has no column name to target. */
+const SAMPLES = [
+  { file: 'parkinsons.csv', title: "Parkinson's (UCI voice)", target: 'status', rows: 195, feats: 22 },
+  { file: 'ilpd.csv', title: 'Indian Liver Patient (ILPD)', target: 'target', rows: 579, feats: 10 },
+  { file: 'heart_failure.csv', title: 'Heart failure clinical records', target: 'DEATH_EVENT', rows: 299, feats: 12 },
+];
+
 const STAGES = ['Ingest', 'Qubit budget', 'Advantage scout', 'Train quantum + classical twins', 'Verdict'];
 
 const STAGE_INDEX: Record<string, number> = { ingest: 0, qubit_budget: 1, advantage_scout: 2, verdict: 4 };
@@ -131,6 +141,16 @@ export function Upload(): ReactNode {
     return () => { alive = false; };
   }, [jobId]);
 
+  /** Pull a shipped sample into the same File the drop zone would produce,
+      and fill in its target column so the run is one click away. */
+  const useSample = async (s: (typeof SAMPLES)[number]): Promise<void> => {
+    const res = await fetch(`/samples/${s.file}`);
+    if (!res.ok) return;
+    const blob = await res.blob();
+    setFile(new File([blob], s.file, { type: 'text/csv' }));
+    setTarget(s.target);
+  };
+
   const submit = async (): Promise<void> => {
     if (!file || !target) {
       setError('Choose a CSV and name its target column.');
@@ -171,6 +191,33 @@ export function Upload(): ReactNode {
       </p>
 
       <Card className="mt-6 p-5">
+        <div className="mb-4">
+          <span className="eyebrow">No dataset handy? Start from a sample</span>
+          <div className="mt-2 grid gap-2 sm:grid-cols-3">
+            {SAMPLES.map((s) => (
+              <div key={s.file} className="rounded-sm border border-rule bg-wash/40 p-3">
+                <div className="text-[13px] font-medium leading-snug text-ink">{s.title}</div>
+                <div className="mt-1 text-[11px] text-ink-60 tnum">
+                  {s.rows} rows &middot; {s.feats} features
+                </div>
+                <div className="mt-1 font-mono text-[11px] text-quantum">target: {s.target}</div>
+                <div className="mt-2 flex items-center gap-3">
+                  <button
+                    type="button"
+                    className="link text-[12px]"
+                    onClick={() => void useSample(s)}
+                  >
+                    Use this
+                  </button>
+                  <a className="link text-[12px]" href={`/samples/${s.file}`} download>
+                    Download
+                  </a>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
         <div
           onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
           onDragLeave={() => setDragOver(false)}
