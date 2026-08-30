@@ -1,0 +1,42 @@
+{
+  "dataset": {
+    "name": "diabetes",
+    "n_samples": 442,
+    "n_features": 10,
+    "task": "regression",
+    "target": "disease progression score"
+  },
+  "budget": {
+    "n_qubits": 8,
+    "method": "pca",
+    "explained_variance": 0.9915132485100713
+  },
+  "heldout": {
+    "vqr": {
+      "r2": 0.4644,
+      "mae": 42.85,
+      "train_seconds": 48.23
+    },
+    "pqk_ridge": {
+      "r2": 0.4497,
+      "mae": 42.43,
+      "train_seconds": 0.38
+    },
+    "ridge": {
+      "r2": 0.4567,
+      "mae": 42.9,
+      "train_seconds": 0.0
+    },
+    "rf": {
+      "r2": 0.4718,
+      "mae": 42.13,
+      "train_seconds": 0.08
+    },
+    "ridge_full": {
+      "r2": 0.4541,
+      "mae": 42.81,
+      "train_seconds": 0.0,
+      "full_features": true
+    }
+  }
+}
