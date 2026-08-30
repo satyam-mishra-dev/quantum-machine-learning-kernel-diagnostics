@@ -25,7 +25,7 @@ model (the never-ship-worse baseline).
 | CuMiDa renal genomics (54,675 genes → 8 qubits) | 0.919 (PQK) | 0.924 (logreg, 8 genes) | 0.936 (random forest, all genes) |
 | Diabetes progression (regression, R²) | 0.464 (VQR) | 0.472 (random forest) | 0.454 (ridge, full) |
 
-Advantage Scout: the "classical_will_match" verdict is 7/7 against
+Advantage Scout: the "classical_will_match" verdict is 6/6 (every dataset in current runs/) against
 measured outcomes (WDBC/Cleveland g-ratio 0.30/0.45, plus ILPD, heart
 failure, Parkinson's via the live adapter, and CuMiDa genomics) — it has never wrongly said
 "don't bother". "advantage_possible" is a necessary-condition signal,

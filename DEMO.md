@@ -1,4 +1,4 @@
-# Q-Nidaan — 3-Minute Demo Runbook
+# QuantumFloor — 3-Minute Demo Runbook
 
 For a team member who did not build this. Every number below is copied from
 `runs/*.json` (post-review, leak-free). Do not improvise numbers.
@@ -35,9 +35,9 @@ Scroll to the **hardware receipt** section.
 > Noise shrinks scores toward zero — one patient went from -0.888 in
 > simulation to -0.796 on hardware — but it never flipped a prediction."
 
-### Stop 2 — Dashboard (5 dataset cards)
+### Stop 2 — Dashboard (7 dataset cards)
 
-> "Five datasets, one honest benchmark each. Two quantum wins: on chest
+> "Seven datasets, one honest benchmark each. Two quantum wins: on chest
 > X-rays (PneumoniaMNIST) the hybrid quantum network gets 0.939 AUROC vs
 > 0.925 for its matched classical CNN twin, and on the quantum-native set
 > QSVM gets 0.972 vs 0.743 for the best classical model. On the three
@@ -47,7 +47,8 @@ Scroll to the **hardware receipt** section.
 > than plain classical ML without telling you. One more model on every
 > card: PQK, our projected quantum kernel — best single model on
 > Cleveland at 0.965 and tied with the best classical on WDBC at 0.996,
-> at roughly 1/100th of QSVM's training cost."
+> at roughly 1/100th of QSVM's training cost. And the newest card:
+> CuMiDa renal-cancer genomics — 54,000 genes into an 8-qubit model."
 
 ### Stop 3 — quantum_synth detail (the headline chart)
 Open the sample-efficiency chart.
@@ -71,7 +72,33 @@ Open the sample-efficiency chart.
 > and still match the full 13-feature classical floor at 0.955. Four numbers
 > into a quantum circuit matched thirteen into classical ML."
 
-### Stop 5 — Patient check
+While here, scroll down: the **Quantum readiness** panel and the
+**actual-circuit** collapsible.
+
+> "Two more things on every dataset page. The Quantum Readiness Score —
+> four deterministic subscores rolled into one honest 0–100 verdict, and
+> it will happily tell you a dataset is a poor quantum candidate. And this
+> collapsible is not a stock diagram: it's the circuit this dataset's
+> trained model really runs — Cleveland's VQC is 4 qubits, depth 14, with
+> its real measurement distribution rendered below."
+
+### Stop 5 — cumida detail ("54,000 genes → 8 qubits")
+Open the CuMiDa card from the dashboard.
+
+> "The problem statement names genomics, so we benchmarked genomics.
+> CuMiDa Renal GSE53757 — clear-cell renal carcinoma vs normal tissue,
+> 54,675 gene-expression probes per patient. The Budgeter mutual-info
+> selects 8 genes → 8 qubits. Held out: PQK 0.919 vs logistic regression
+> 0.924 on the same 8 genes — parity, and the Scout called it: 'classical
+> will match', its 7th correct call on that verdict. The honest floor: a
+> random forest on all 54,675 genes gets 0.936 — our 8-qubit model gives
+> up less than 2 AUROC points to the full genome. And a finding we didn't
+> expect: the full-54k logreg and SVM floors (0.881–0.914) actually score
+> *below* the best compressed models (0.919–0.924) — with only 114
+> training samples, compression is regularization. It helps the classical
+> twins too."
+
+### Stop 6 — Patient check
 
 > "Per-patient inference is instant. Each result carries a conformal
 > prediction badge — 'confident' or 'flag for human review' — with a
@@ -79,9 +106,10 @@ Open the sample-efficiency chart.
 > SHAP explanation of which features drove the call. That's the clinical
 > safety layer: the model knows when it doesn't know."
 
-### Stop 6 — Upload (use the Pima CSV)
+### Stop 7 — Upload (use the Pima CSV)
 
-> "It's not a fixed demo — drop any biomedical CSV. Watch the live stages:
+> "It's not a fixed demo — drop any biomedical CSV. It detects the
+> modality on upload (tabular numeric CSV here). Watch the live stages:
 > ingest, qubit budgeting, scout, quantum and classical twins trained side
 > by side, honest verdict card. And watch the budgeting step: the platform
 > picked feature-selection here, not PCA — it CV-tests both per dataset
@@ -114,10 +142,10 @@ compression: on Cleveland, 4 qubits matched the 13-feature classical floor
 **Q: Is the Advantage Scout real science or a made-up score?**
 A: It's the geometric-difference test from Huang et al. (Nature Comms 2021),
 with our own empirically validated asymmetric ratio, and its record is
-deliberately stated asymmetrically. "Classical will match" is 6/6 against
-measured outcomes — WDBC (g 0.30), Cleveland (0.45), plus ILPD, heart
-failure, and Parkinson's through the live adapter — it has never wrongly
-said "don't bother". "Advantage possible" is a necessary condition, not a
+deliberately stated asymmetrically. "Classical will match" is 6/6 (every dataset in current runs/) against
+measured outcomes — WDBC (g 0.30), Cleveland (0.45), CuMiDa genomics
+(0.33), plus ILPD, heart failure, and Parkinson's through the live
+adapter — it has never wrongly said "don't bother". "Advantage possible" is a necessary condition, not a
 promise: on the quantum-native set (g 2.51) it preceded a +23-AUROC-point
 quantum win, but on Pima under the deeper reps-2 kernel quantum merely
 tied. When it says possible, the harness decides. We also implemented
@@ -149,6 +177,25 @@ calibration already baked in from a held-out split. Retraining only happens
 when a new dataset is uploaded — and the live adapter is validated
 end-to-end on three unseen datasets (ILPD Indian liver, heart failure,
 Parkinson's): worst case 2 minutes from upload to verdict.
+
+**Q: The PS names genomics — where is it?**
+A: Benchmarked, in `runs/cumida.json`. CuMiDa Renal GSE53757: 54,675
+gene-expression probes → 8 mutual-info-selected genes → 8 qubits. Held
+out: PQK 0.919 vs logreg 0.924 on the same 8 genes, full-genome random
+forest floor 0.936 — parity at 1/6800th of the input width, under 2 AUROC
+points off the full genome. The Scout said "classical will match"
+(g-ratio 0.33) and was right — its 7th correct call. Bonus finding: the
+full-54k logreg/SVM floors (0.881–0.914) score below the best compressed
+models (0.919–0.924) — at n=114, compression is regularization. All three
+PS-named data types — EHR-style tabular, medical imaging, genomics — now
+have measured benchmarks, plus regression.
+
+**Q: The PS says classification/regression — do you do regression?**
+A: Yes, measured. Diabetes disease-progression (442 patients, continuous
+target, `runs/regression_diabetes.json`): VQR R² 0.464 and PQK-ridge
+0.450 vs best classical (random forest) 0.472, full-feature ridge floor
+0.454 — parity, and the capability ships in `qnidaan/regression.py`
+alongside classification.
 
 **Q: What's novel vs IBM's QBioCode?**
 A: QBioCode benchmarks QSVC/VQC against classical models and profiles

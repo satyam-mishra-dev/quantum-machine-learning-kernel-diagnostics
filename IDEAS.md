@@ -10,7 +10,7 @@ soft gap documented:
 1. GENOMICS (named in PS background, promised in idea doc, never built) —
    now real: CuMiDa Renal_GSE53757, 54,675 gene probes → 8 MI-selected
    genes → 8 qubits. PQK 0.919 vs logreg-8-genes 0.924 vs full-genome RF
-   0.936. Scout called "classical_will_match" correctly (now 7/7 on that
+   0.936. Scout called "classical_will_match" correctly (now 6/6 (every dataset in current runs/) on that
    verdict). Bonus finding: full-54k-gene floors (0.881-0.914 for
    logreg/svm) UNDERPERFORM the compressed models — with 114 training
    samples, the Budgeter's compression is regularization; it helps
@@ -73,7 +73,7 @@ the same paper our Scout is built on."
 **Adapter validated on 3 unseen datasets via the live API** (ILPD Indian
 liver, heart failure, Parkinson's voice): scout 3/3 consistent
 ("classical_will_match" every time, no false advantage calls), worst-case
-upload-to-verdict 2 minutes. Scout lifetime: 7/7.
+upload-to-verdict 2 minutes. Scout lifetime: 6/6 (every dataset in current runs/).
 
 **Ensemble (q+c soft-vote): honest verdict "marginal, harmless"** — best
 AUROC on WDBC by 0.0004, mid-pack on Cleveland. Kept as a served model,
