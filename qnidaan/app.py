@@ -51,6 +51,8 @@ def datasets():
         r = json.loads(f.read_text())
         if "heldout" not in r:  # tuned.json, hardware_*.json live here too
             continue
+        if r.get("dataset", {}).get("task") == "regression":
+            continue  # r2/mae metrics; not a classification dashboard row
         servable = [m for m in r["heldout"] if not m.endswith("_full")]
         best = max(servable, key=lambda m: r["heldout"][m]["auroc"])
         floors = [m for m in r["heldout"] if m.endswith("_full")]
