@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import clsx from 'clsx';
 import gsap from 'gsap';
 import { api, MODEL_LABELS, isQuantum, type JobStatus } from '../lib/api';
-import { Badge, Button, Card, ColdStartNote, ErrorState, Eyebrow, KV, PageTitle } from '../components/ui';
+import { Badge, Button, Card, ColdStartNote, ErrorState, Eyebrow, KV, PageTitle, ReadinessBreakdown } from '../components/ui';
 
 /** Shipped in web/public/samples/. Every one is verified to parse through
     qnidaan.datasets.load_csv with the target column named here. Cleveland and
@@ -95,10 +95,23 @@ function VerdictCard({ result }: { result: NonNullable<JobStatus['result']> }): 
         {' '}· {budget.n_qubits} qubits ({budget.method})
         {' '}· scout said {scout.quantum_worth_trying ? 'quantum worth trying' : 'no quantum edge expected'}
       </p>
+      {/* The upload adapter only accepts numeric tabular CSVs, so a finished
+          run is by construction tabular — confirm it, don't pretend to infer more. */}
+      <p className="mt-1 font-mono text-[11px] text-ink-60">
+        Detected modality: Tabular (numeric CSV)
+      </p>
       {result.train_rows_capped && (
         <p className="mt-1 font-mono text-[11px] text-hold">
           trained on a {result.train_rows_used ?? 400}-row subsample to keep the quantum kernel tractable
         </p>
+      )}
+      {result.readiness && (
+        <div className="mt-5 border-t border-rule pt-5">
+          <Eyebrow>Quantum readiness</Eyebrow>
+          <div className="mt-3 max-w-sm">
+            <ReadinessBreakdown r={result.readiness} />
+          </div>
+        </div>
       )}
       <div className="mt-5 grid gap-x-10 sm:grid-cols-2">
         {Object.entries(heldout).map(([m, e]) => (

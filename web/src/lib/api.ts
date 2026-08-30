@@ -65,6 +65,26 @@ export type Prediction = {
   dataset: string;
 };
 
+export type Readiness = {
+  overall: number;
+  subscores: {
+    small_data_fit: number;
+    compressibility: number;
+    quantum_geometry: number;
+    class_balance: number;
+  };
+  verdict_text: string;
+};
+
+export type CircuitInfo = {
+  model: string;
+  n_qubits: number;
+  ascii: string;
+  depth: number;
+  gates: Record<string, number>;
+  measurement: { basis_state_probs: Record<string, number> };
+};
+
 export type Verdict = {
   best_model: string;
   best_quantum?: string;
@@ -83,6 +103,7 @@ export type JobStatus = {
     scout: Scout;
     heldout: Record<string, ModelEval>;
     verdict: Verdict;
+    readiness?: Readiness;
     train_rows_used?: number;
     train_rows_capped?: boolean;
   };

@@ -1,5 +1,7 @@
 import type { ButtonHTMLAttributes, HTMLAttributes, ReactNode } from 'react';
 import clsx from 'clsx';
+import type { Readiness } from '../lib/api';
+import { CountUp } from './motion';
 
 // Themed primitives inherited from the Tally design system: every color is a
 // token, radius 4px, flat 1px --rule borders, no card shadows.
@@ -96,6 +98,42 @@ export function KV({ k, v }: { k: ReactNode; v: ReactNode }): ReactNode {
     <div className="flex items-baseline justify-between gap-4 border-b border-rule py-2 last:border-b-0">
       <span className="text-[13px] text-ink-60">{k}</span>
       <span className="font-mono text-[13px] text-ink tnum">{v}</span>
+    </div>
+  );
+}
+
+const SUBSCORE_LABELS: Record<keyof Readiness['subscores'], string> = {
+  small_data_fit: 'Small-data fit',
+  compressibility: 'Compressibility',
+  quantum_geometry: 'Quantum geometry',
+  class_balance: 'Class balance',
+};
+
+/** Quantum Readiness Score: overall count-up + subscore bars + honest verdict. */
+export function ReadinessBreakdown({ r }: { r: Readiness }): ReactNode {
+  return (
+    <div>
+      <div className="flex items-baseline gap-2">
+        <CountUp value={r.overall} decimals={0} className="font-mono text-[34px] leading-none text-ink tnum" />
+        <span className="text-[12px] text-ink-60">/ 100</span>
+      </div>
+      <div className="mt-4 space-y-2.5">
+        {(Object.keys(SUBSCORE_LABELS) as Array<keyof Readiness['subscores']>).map((k) => (
+          <div key={k}>
+            <div className="flex items-baseline justify-between font-mono text-[11px] text-ink-60">
+              <span>{SUBSCORE_LABELS[k]}</span>
+              <span className="tnum">{r.subscores[k].toFixed(0)}</span>
+            </div>
+            <div className="mt-1 h-1.5 overflow-hidden rounded-sm bg-wash">
+              <div
+                className="h-full rounded-sm bg-quantum transition-[width] duration-700"
+                style={{ width: `${Math.max(0, Math.min(100, r.subscores[k]))}%` }}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+      <p className="mt-3 text-[12px] leading-relaxed text-ink-60">{r.verdict_text}</p>
     </div>
   );
 }

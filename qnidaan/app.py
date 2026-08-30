@@ -23,6 +23,7 @@ from qnidaan.harness import MODELS_DIR, RUNS_DIR, SoftVote
 _main.SoftVote = SoftVote  # bundles pickled by `python -m qnidaan.harness`
                            # reference __main__.SoftVote; alias it so
                            # joblib.load resolves outside the harness
+from qnidaan.readiness import readiness
 from qnidaan.report import patient_report
 
 app = FastAPI(title="Q-Nidaan")
@@ -87,6 +88,71 @@ def run_detail(name: str):
     if not path.exists():
         raise HTTPException(404, "no such run")
     return json.loads(path.read_text())
+
+
+@app.get("/api/readiness/{name}")
+def readiness_for(name: str):
+    path = RUNS_DIR / f"{name}.json"
+    if not path.exists():
+        raise HTTPException(404, "no such run")
+    r = json.loads(path.read_text())
+    if not r.get("scout"):  # image-track runs have no scout
+        raise HTTPException(404, "no readiness score for image-track runs")
+    d = r["dataset"]
+    n = (d.get("n_train") or 0) + (d.get("n_test") or 0)
+    return readiness(n, d.get("n_features", 0),
+                     float(d.get("prevalence", 0.5)),
+                     r["scout"], r.get("budget", {}))
+
+
+@app.get("/api/circuit/{name}")
+def circuit(name: str, model: str = "qsvm"):
+    """The real circuit behind a served model: ascii drawing, device-level
+    depth/gate counts, and the basis-state distribution from one simulator
+    execution on a real background sample."""
+    import pennylane as qml
+
+    from qnidaan.quantum import _device, _feature_map
+
+    b = bundle(name)
+    if model not in ("qsvm", "pqk", "vqc") or model not in b["models"]:
+        raise HTTPException(422, f"no quantum circuit for model {model!r}")
+    m = b["models"][model]
+    n_qubits = m.n_qubits
+    x = np.asarray(b["Z_background"][0], dtype=float)
+    dev = _device(n_qubits)
+    wires = list(range(n_qubits))
+
+    if model == "vqc":
+        weights = np.asarray(m.weights_, dtype=float)
+
+        @qml.qnode(dev)
+        def qc(x):
+            qml.AngleEmbedding(x, wires=wires, rotation="Y")
+            qml.StronglyEntanglingLayers(weights, wires=wires)
+            return qml.probs(wires=wires)
+    else:  # qsvm / pqk share the feature map; show it as-is
+        reps = m.reps
+
+        @qml.qnode(dev)
+        def qc(x):
+            _feature_map(x, wires, reps)
+            return qml.probs(wires=wires)
+
+    probs = np.asarray(qc(x))
+    top = np.argsort(probs)[::-1][:8]
+    res = qml.specs(qc, level="device")(x)["resources"]
+    return {
+        "model": model,
+        "n_qubits": n_qubits,
+        "ascii": qml.draw(qc, level="device")(x),
+        "depth": int(res.depth),
+        "gates": {k: int(v) for k, v in res.gate_types.items()},
+        "measurement": {"basis_state_probs": {
+            format(int(i), f"0{n_qubits}b"): round(float(probs[i]), 4)
+            for i in top
+        }},
+    }
 
 
 class PredictIn(BaseModel):
@@ -200,6 +266,9 @@ def _run_adapter(X, y, meta, budget, job):
         "train_rows_used": int(len(ytr)),
         "train_rows_capped": capped,
     }
+    out["readiness"] = readiness(len(y), meta["n_features"],
+                                 float(np.mean(y)), out["scout"],
+                                 out["budget"])
     models = {**make_twins(), "qsvm": QSVM(n_qubits=plan.n_qubits, C=10),
               "pqk": PQK(n_qubits=plan.n_qubits)}
     for mname, m in models.items():
