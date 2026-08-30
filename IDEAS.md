@@ -2,6 +2,39 @@
 
 Running log of build epochs and PPT-worthy findings. Newest first.
 
+## Epoch 8 — PS gap-closure night (2026-08-31)
+
+**The audit:** re-read the PS verbatim (recovered from the original
+transcript) and questioned every line. Two hard gaps found and closed, one
+soft gap documented:
+1. GENOMICS (named in PS background, promised in idea doc, never built) —
+   now real: CuMiDa Renal_GSE53757, 54,675 gene probes → 8 MI-selected
+   genes → 8 qubits. PQK 0.919 vs logreg-8-genes 0.924 vs full-genome RF
+   0.936. Scout called "classical_will_match" correctly (now 7/7 on that
+   verdict). Bonus finding: full-54k-gene floors (0.881-0.914 for
+   logreg/svm) UNDERPERFORM the compressed models — with 114 training
+   samples, the Budgeter's compression is regularization; it helps
+   classical models too. "54,000 genes through an 8-qubit model, losing
+   only 1.7 points to a full-genome random forest" is the PPT line.
+2. REGRESSION ("classification/regression" objective) — VQR + PQK-ridge on
+   diabetes progression: R² 0.464/0.450 vs classical 0.472, parity,
+   capability measured. `runs/regression_diabetes.json`.
+3. Computational efficiency as a benchmark axis — circuit endpoint now
+   reports real depth/gate counts; PQK's 100x train-time advantage is the
+   efficiency story; COMPLIANCE.md maps it to the objective.
+
+**QMedX ports shipped (from the user's comparison doc):** Quantum Readiness
+Score (4 deterministic subscores, honest verdict text, in upload + per
+dataset), live circuit visualization of the ACTUAL trained circuits
+(Cleveland VQC: 4 qubits, depth 14, real measurement distribution),
+modality line on upload. AutoPilot stages already existed.
+
+**COMPLIANCE.md** now answers the PS line-by-line with measured numbers —
+the "question each line" artifact the user asked for.
+
+**Product rename noted:** user renamed the product QuantumFloor (web copy;
+python package stays qnidaan) and deployed to Render+Vercel free tiers.
+
 ## Epoch 7 — the Budgeter learns to choose (2026-08-28, ~02:30)
 
 **Auto-choice compression shipped and it closed the PIMA gap.** The
