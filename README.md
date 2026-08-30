@@ -1,6 +1,8 @@
-# Q-Nidaan
+# QuantumFloor
 
 Hybrid quantum-classical ML platform for early disease detection (SIH 2026).
+Product name: **QuantumFloor**; the Python package and repo keep the working
+name `qnidaan` (Q-Nidaan).
 
 Upload a biomedical dataset → auto-compress to a qubit budget → train a hybrid
 quantum model beside a matched classical twin → get an honest benchmark report
@@ -36,6 +38,31 @@ agreement.
 
 All numbers regenerate from `python -m qnidaan.harness` and land in
 `runs/*.json`.
+
+## Delivery Table (Expected Deliverables)
+
+| # | PS deliverable | What we ship |
+|---|---|---|
+| D1 | Data handling pipelines | Tabular loaders + universal CSV adapter (`qnidaan/datasets.py`) and a medical-image track (`qnidaan/images.py`). Modalities: tabular CSV and 28x28 grayscale images today; ECG/PTB-XL signal adapter on the roadmap. Upload caps: 5MB / 600 rows / 10 qubits, reported back in results. |
+| D2 | Hybrid quantum-classical models | QSVM, PQK, VQC, hybrid QNN (`qnidaan/quantum.py`, `images.py`) — each benchmarked against matched classical twins at the same qubit budget plus a full-feature classical floor (`classical.py`). Quantum regression (VQR, PQK-ridge) in `regression.py`, results landing tonight. |
+| D3 | Feature engineering | Qubit Budgeter with auto-choice (`budgeter.py`): fits both PCA and mutual-info selection, CV-probes each, picks per dataset and records the runner-up score (Pima: select 0.814 vs pca 0.777 — selection lifted compressed models ~0.07 AUROC, `runs/compress_exp.json`). |
+| D4 | Training & inference workflows | `python -m qnidaan.harness` (benchmark), `qnidaan.tune` (CV tuning), `POST /api/upload` AutoPilot with live stages (ingest → budget → scout → training:model → verdict) polled at `/api/jobs/{id}`, per-patient `POST /api/predict/{name}`. |
+| D5 | Performance evaluation | Per-model AUROC, accuracy, spec@95%sensitivity, train_seconds, conformal qhat in every `runs/*.json`; 5-seed leak-free sample-efficiency curves; calibration caution flags. |
+| D6 | Explainability | Per-patient SHAP top features in original clinical names, split conformal prediction sets with "flag for human review" on borderline cases, clinician-report fields (`qnidaan/report.py`). |
+| D7 | Functional platform | React frontend (`web/`: Dashboard, DatasetDetail, PatientCheck, Upload), FastAPI backend (`qnidaan/app.py`), Docker + Render deployment (`render.yaml`). |
+| D8 | Biomedical datasets (public/open) | WDBC, Cleveland, Pima, quantum-native synthetic, PneumoniaMNIST, BreastMNIST benchmarked in `runs/`; ILPD, heart failure, Parkinson's validated live via the adapter; CuMiDa cancer genomics landing tonight. |
+| D9 | Near-term hardware compatibility | Real-QPU inference receipt: ibm_marrakesh, job `da8724bsq5js73bko9eg`, 4 qubits / 1024 shots, DD + twirling + TREX mitigation, 4/4 sim-hardware agreement (`runs/hardware_cleveland.json`). |
+| D10 | Comprehensive documentation | `README.md`, `COMPLIANCE.md` (line-by-line PS audit), `DEMO.md` (3-min runbook + judge Q&A), `IDEAS.md` (epoch log, negative results included). |
+
+## What we deliberately do not build
+
+- Arbitrary DICOM/EHR ingestion — CSV + supported image benchmarks only in MVP.
+- Diagnostic claims — outputs are decision support with conformal uncertainty,
+  never a diagnosis.
+- Federated training — single-tenant MVP; federation is roadmap.
+- Circuits beyond 12 qubits — near-term hardware honesty over paper qubit counts.
+- Blanket quantum-advantage claims — the Scout and the harness decide per
+  dataset, and negative results ship (see BreastMNIST).
 
 ## Setup
 
