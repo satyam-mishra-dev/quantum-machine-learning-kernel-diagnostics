@@ -22,10 +22,12 @@ model (the never-ship-worse baseline).
 | Pima diabetes | 0.802 (VQC) | 0.806 (SVM-RBF) | 0.823 (logreg) |
 | Quantum-native synthetic | 0.972 (QSVM) | 0.743 (random forest) | 0.766 (random forest) |
 | PneumoniaMNIST X-rays | 0.939 (hybrid QNN) | 0.925 (matched CNN) | — (image track) |
+| CuMiDa renal genomics (54,675 genes → 8 qubits) | 0.919 (PQK) | 0.924 (logreg, 8 genes) | 0.936 (random forest, all genes) |
+| Diabetes progression (regression, R²) | 0.464 (VQR) | 0.472 (random forest) | 0.454 (ridge, full) |
 
-Advantage Scout: the "classical_will_match" verdict is 6/6 against
+Advantage Scout: the "classical_will_match" verdict is 7/7 against
 measured outcomes (WDBC/Cleveland g-ratio 0.30/0.45, plus ILPD, heart
-failure, Parkinson's via the live adapter) — it has never wrongly said
+failure, Parkinson's via the live adapter, and CuMiDa genomics) — it has never wrongly said
 "don't bother". "advantage_possible" is a necessary-condition signal,
 not a promise: quantum_synth (g-ratio 2.51) → QSVM 0.972 vs 0.743;
 Pima under the deeper reps-2 kernel (g-ratio 1.68) → quantum merely
@@ -50,7 +52,7 @@ All numbers regenerate from `python -m qnidaan.harness` and land in
 | D5 | Performance evaluation | Per-model AUROC, accuracy, spec@95%sensitivity, train_seconds, conformal qhat in every `runs/*.json`; 5-seed leak-free sample-efficiency curves; calibration caution flags. |
 | D6 | Explainability | Per-patient SHAP top features in original clinical names, split conformal prediction sets with "flag for human review" on borderline cases, clinician-report fields (`qnidaan/report.py`). |
 | D7 | Functional platform | React frontend (`web/`: Dashboard, DatasetDetail, PatientCheck, Upload), FastAPI backend (`qnidaan/app.py`), Docker + Render deployment (`render.yaml`). |
-| D8 | Biomedical datasets (public/open) | WDBC, Cleveland, Pima, quantum-native synthetic, PneumoniaMNIST, BreastMNIST benchmarked in `runs/`; ILPD, heart failure, Parkinson's validated live via the adapter; CuMiDa cancer genomics landing tonight. |
+| D8 | Biomedical datasets (public/open) | WDBC, Cleveland, Pima, quantum-native synthetic, PneumoniaMNIST, BreastMNIST benchmarked in `runs/`; ILPD, heart failure, Parkinson's validated live via the adapter; CuMiDa renal genomics (54,675 genes) benchmarked in `runs/cumida.json`; diabetes-progression regression in `runs/regression_diabetes.json`. |
 | D9 | Near-term hardware compatibility | Real-QPU inference receipt: ibm_marrakesh, job `da8724bsq5js73bko9eg`, 4 qubits / 1024 shots, DD + twirling + TREX mitigation, 4/4 sim-hardware agreement (`runs/hardware_cleveland.json`). |
 | D10 | Comprehensive documentation | `README.md`, `COMPLIANCE.md` (line-by-line PS audit), `DEMO.md` (3-min runbook + judge Q&A), `IDEAS.md` (epoch log, negative results included). |
 
