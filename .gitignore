@@ -24,3 +24,4 @@ dist/
 
 # sample CSVs shipped to the frontend for the upload demo
 !web/public/samples/*.csv
+web/tsconfig.tsbuildinfo
