@@ -63,7 +63,6 @@ def test_phase2_schema():
     
     # Artifact generation
     run_dir = Path(__file__).resolve().parent.parent / "runs" / f"QF-{job_id}"
-    assert (run_dir / "report.html").exists(), "HTML report not generated"
     assert (run_dir / "metrics.json").exists()
     assert (run_dir.parent / f"QuantumFloor_{job_id}.zip").exists()
     

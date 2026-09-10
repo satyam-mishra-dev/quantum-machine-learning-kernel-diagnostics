@@ -19,10 +19,13 @@ const STAGES = [
   { id: 'QUEUED', label: 'Job queued' },
   { id: 'INGESTING', label: 'Dataset loaded' },
   { id: 'SPLITTING', label: 'Train/test split' },
+  { id: 'PREPROCESSING', label: 'Preprocessing' },
   { id: 'BUDGETING', label: 'Qubit budget selection' },
   { id: 'SCOUTING', label: 'Quantum geometry scout' },
+  { id: 'PLANNING', label: 'Execution planning' },
   { id: 'TRAINING_CLASSICAL', label: 'Classical twins' },
   { id: 'TRAINING_QUANTUM', label: 'Quantum kernel' },
+  { id: 'EXPLAINING', label: 'Explainability & SHAP' },
   { id: 'EVALUATING', label: 'Evaluation & verdict' },
   { id: 'COMPLETED', label: 'Completed' }
 ];
@@ -190,13 +193,23 @@ export function Upload(): ReactNode {
           api<JobStatus>(`/api/jobs/${jobId}`).then(setJob);
         }
       } else if (data.message) {
-        setLogs(prev => [data, ...prev]);
-        setJob(prev => ({ ...prev, stage: data.stage } as JobStatus));
+        setLogs(prev => {
+          // Keep last 500 logs to prevent memory leak on long runs
+          const newLogs = [data, ...prev];
+          return newLogs.length > 500 ? newLogs.slice(0, 500) : newLogs;
+        });
+        setJob(prev => prev ? ({ ...prev, stage: data.stage } as JobStatus) : { status: 'RUNNING', stage: data.stage } as JobStatus);
       }
     };
     
     eventSource.onerror = () => {
       eventSource.close();
+      setJob(prev => {
+        // If it was already completed/failed, just ignore the error
+        if (prev && (prev.status === 'COMPLETED' || prev.status === 'FAILED')) return prev;
+        return prev ? ({ ...prev, status: 'FAILED', error: 'Connection lost' } as JobStatus) : { status: 'FAILED', error: 'Connection lost' } as JobStatus;
+      });
+      setError('Connection lost to backend job tracker. Status may be stale.');
     };
 
     return () => { eventSource.close(); };
@@ -232,7 +245,7 @@ export function Upload(): ReactNode {
       const res = await api<any>('/api/upload', { method: 'POST', body: form });
       setJobId(res.job_id);
       setProfile(res.profile);
-      setJob({ status: 'running', stage: 'QUEUED' } as JobStatus);
+      setJob({ status: 'RUNNING', stage: 'QUEUED' } as JobStatus);
     } catch (e) {
       const msg = (e as Error).message;
       try {
@@ -262,7 +275,7 @@ export function Upload(): ReactNode {
       const res = await api<any>('/api/upload', { method: 'POST', body: form });
       setJobId(res.job_id);
       setProfile(res.profile);
-      setJob({ status: 'running', stage: 'QUEUED' } as JobStatus);
+      setJob({ status: 'RUNNING', stage: 'QUEUED' } as JobStatus);
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -270,7 +283,7 @@ export function Upload(): ReactNode {
     }
   };
 
-  const running = job?.status === 'running' || job?.status === 'QUEUED' || (jobId != null && job == null && !error);
+  const running = job?.status === 'RUNNING' || job?.status === 'QUEUED' || (jobId != null && job == null && !error);
 
   return (
     <div>
@@ -343,7 +356,7 @@ export function Upload(): ReactNode {
           </div>
           <label className="cursor-pointer">
             <span className="link text-[13px]">browse files</span>
-            <input type="file" accept=".csv,text/csv" className="sr-only" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+            <input type="file" accept=".csv,text/csv,.zip,application/zip" className="sr-only" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
           </label>
         </div>
 
@@ -387,7 +400,7 @@ export function Upload(): ReactNode {
             <Eyebrow>Autopilot Engine{jobId ? ` · job ${jobId}` : ''}</Eyebrow>
             {job?.status === 'COMPLETED' && <Badge tone="credit">done</Badge>}
             {job?.status === 'FAILED' && <Badge tone="debit">error</Badge>}
-            {(job?.status === 'running' || job?.status === 'QUEUED') && <Badge tone="hold">running</Badge>}
+            {(job?.status === 'RUNNING' || job?.status === 'QUEUED') && <Badge tone="hold">running</Badge>}
           </div>
           <Pipeline done={job?.status === 'COMPLETED'} stage={job?.stage} logs={logs} />
           {job?.status === 'FAILED' && (

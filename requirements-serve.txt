@@ -10,3 +10,6 @@ pandas==3.0.5
 scikit-learn==1.9.0
 pennylane==0.45.1
 shap==0.52.0
+fpdf2
+opencv-python-headless
+medmnist

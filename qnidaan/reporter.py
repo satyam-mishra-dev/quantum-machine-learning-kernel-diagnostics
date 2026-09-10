@@ -25,7 +25,7 @@ class PDF(FPDF):
         self.set_font("helvetica", "", 11)
         # Convert value to string and replace newlines with spaces for single line, 
         # or just print it if it's short.
-        val_str = str(value).replace('\n', ' ')
+        val_str = str(value).replace('\n', ' ').replace('⚠', '[!]').replace('—', '-')
         self.cell(0, 8, val_str, new_x="LMARGIN", new_y="NEXT")
         
     def alert_box(self, warnings, ff_auroc=None):
@@ -35,7 +35,7 @@ class PDF(FPDF):
         self.cell(0, 10, "Scientific Integrity Warnings", border=1, fill=True, new_x="LMARGIN", new_y="NEXT")
         self.set_font("helvetica", "", 10)
         for w in warnings:
-            self.multi_cell(0, 6, "Warning: " + w, border="LR", fill=True)
+            self.multi_cell(0, 6, "Warning: " + w.replace('⚠', '[!]').replace('—', '-'), border="LR", fill=True)
         if ff_auroc is not None:
             msg = (f"Full-Feature Classical AUROC = {ff_auroc:.4f} flagged: "
                    "Duplicate rows in this dataset may inflate metrics when identical samples "
@@ -124,9 +124,11 @@ def generate_report(job_id, result, meta, out_path):
         spec = f"{e.get('spec_at_95sens', 0):.4f}" if "spec_at_95sens" in e else "N/A"
         err = e.get('error', '')
         iw = e.get('integrity_warning', '')
-        note = (err[:30] + "..") if err else ("⚠ Integrity Warning" if iw else "")
+        note = (err[:30] + "..") if err else ("[!] Integrity Warning" if iw else "")
         if m == 'full_feature_classical' and verdict.get('full_feature_floor_has_integrity_warning'):
-            note = "⚠ Flawed by duplicates"
+            note = "[!] Flawed by duplicates"
+        
+        note = note.replace('⚠', '[!]').replace('—', '-')
         
         pdf.cell(40, 8, m, 1)
         pdf.cell(30, 8, mtype, 1)

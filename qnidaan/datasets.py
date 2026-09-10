@@ -159,15 +159,15 @@ def detect_modality(df: pd.DataFrame, file_ext: str = ".csv") -> dict:
     # Simple logic for now: if CSV, it's Tabular or Signal.
     # Signal heuristic: 1D array or all numeric with standard time/freq columns
     if file_ext == ".zip":
-        return {"modality": "IMAGE", "confidence": "99%", "reasoning": "ZIP file provided, assumed image collection."}
+        return {"modality": "IMAGE", "reasoning": "ZIP file provided, assumed image collection."}
     
     # Check for Tabular vs Signal
     num_cols = df.select_dtypes(include='number').columns
     if len(num_cols) == len(df.columns) and len(df.columns) > 50:
         if all(str(c).isdigit() for c in df.columns) or any('hz' in str(c).lower() or 'time' in str(c).lower() for c in df.columns[:5]):
-            return {"modality": "SIGNAL", "confidence": "85%", "reasoning": f"Detected {len(df.columns)} numeric columns indicating raw time-series/signal."}
+            return {"modality": "SIGNAL", "reasoning": f"Detected {len(df.columns)} numeric columns indicating raw time-series/signal."}
     
-    return {"modality": "TABULAR", "confidence": "98%", "reasoning": f"{len(df.columns)} structured columns with mixed numerical/categorical features."}
+    return {"modality": "TABULAR", "reasoning": f"{len(df.columns)} structured columns with mixed numerical/categorical features."}
 
 def load_csv(path_or_buf, target_column: str = "", file_name: str = "upload.csv"):
     """Universal adapter entry point: any dataset with a target column."""
@@ -313,8 +313,7 @@ def load_csv(path_or_buf, target_column: str = "", file_name: str = "upload.csv"
         "imbalance_ratio": imbalance_ratio,
         "computational_cost_estimate": cost,
         "modality": modality_info["modality"],
-        "modality_confidence": modality_info["confidence"],
-        "modality_reasoning": modality_info["reasoning"]
+        "modality_reasoning": modality_info.get("reasoning", "")
     }
 
     # Apply Modality-specific Classical Preprocessing
@@ -406,7 +405,6 @@ def load_image_benchmark(name: str):
         "imbalance_ratio": float(max((y_all == 0).sum(), (y_all == 1).sum()) / max(1, min((y_all == 0).sum(), (y_all == 1).sum()))),
         "computational_cost_estimate": "High",
         "modality": "IMAGE",
-        "modality_confidence": "100%",
         "modality_reasoning": "Explicit benchmark dataset triggered: " + title
     }
     
@@ -486,7 +484,6 @@ def load_zip(path_or_buf, budget: int = 8):
                 "classes": len(classes),
                 "missing_pct": 0,
                 "modality": "IMAGE",
-                "modality_confidence": "99%",
                 "modality_reasoning": "ZIP file with image subdirectories.",
                 "computational_cost_estimate": "High"
             }
