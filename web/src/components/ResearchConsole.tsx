@@ -54,22 +54,17 @@ export function ResearchConsole({ result, jobId: propJobId, profile }: { result:
           </div>
           
           <div className="text-sm font-mono text-ink-60 space-y-2">
-            <div className="flex justify-between border-b border-rule/50 pb-1">
-              <span>Cross-split duplicate groups</span>
-              <span className="text-emerald-400">0</span>
-            </div>
-            <div className="flex justify-between border-b border-rule/50 pb-1">
-              <span>Target leakage</span>
-              <span className="text-emerald-400">0</span>
-            </div>
-            <div className="flex justify-between border-b border-rule/50 pb-1">
-              <span>Identifier leakage</span>
-              <span className="text-emerald-400">0</span>
-            </div>
-            <div className="flex justify-between border-b border-rule/50 pb-1">
-              <span>Preprocessing leakage</span>
-              <span className="text-emerald-400">0</span>
-            </div>
+            {result?.integrity_warnings?.length > 0 ? (
+              result.integrity_warnings.map((w: string, i: number) => (
+                <div key={i} className="text-amber-400 text-[11px] leading-tight pb-1 border-b border-rule/50">
+                  ⚠ {w}
+                </div>
+              ))
+            ) : (
+              <div className="text-emerald-400 text-[11px] leading-tight pb-1 border-b border-rule/50">
+                ✓ No structural leakage detected
+              </div>
+            )}
           </div>
         </div>
         
