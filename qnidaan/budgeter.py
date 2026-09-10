@@ -10,7 +10,10 @@ import numpy as np
 from sklearn.decomposition import PCA
 from sklearn.feature_selection import SelectKBest, mutual_info_classif
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import MinMaxScaler, StandardScaler
+from sklearn.preprocessing import MinMaxScaler, StandardScaler, OneHotEncoder
+from sklearn.compose import ColumnTransformer
+from sklearn.impute import SimpleImputer
+import pandas as pd
 
 
 @dataclass
@@ -28,17 +31,66 @@ class BudgetPlan:
         return self.pipeline.transform(X)
 
 
+def _build_preprocessor(X_train):
+    """Build a ColumnTransformer for preprocessing if X_train is a DataFrame."""
+    if not isinstance(X_train, pd.DataFrame):
+        return None
+        
+    num_cols = list(X_train.select_dtypes(include='number').columns)
+    cat_cols = list(X_train.select_dtypes(exclude='number').columns)
+    
+    transformers = []
+    if num_cols:
+        num_pipe = Pipeline([
+            ("imputer", SimpleImputer(strategy="median")),
+            ("scaler", StandardScaler())
+        ])
+        transformers.append(("num", num_pipe, num_cols))
+        
+    if cat_cols:
+        cat_pipe = Pipeline([
+            ("imputer", SimpleImputer(strategy="constant", fill_value="missing")),
+            ("ohe", OneHotEncoder(handle_unknown="ignore", sparse_output=False))
+        ])
+        transformers.append(("cat", cat_pipe, cat_cols))
+        
+    if not transformers:
+        return None
+        
+    return ColumnTransformer(transformers, remainder="passthrough")
+
+
 def fit_budget(X_train, budget: int = 8, y=None,
                method: str = "pca") -> BudgetPlan:
+    is_df = isinstance(X_train, pd.DataFrame)
+    
+    # If it's a DataFrame, the number of features after OHE might expand.
+    # But we can approximate d as the initial columns just for the `d <= budget` fast path
+    # Actually, to be safe with OHE, we should build the preprocessor and see the expanded size.
+    preprocessor = _build_preprocessor(X_train)
+    
+    if preprocessor:
+        # We need to know the expanded size, so let's just fit the preprocessor on a small sample
+        # to determine output shape, or just always run PCA/select if there are categoricals.
+        # For simplicity, we just use the pipeline.
+        base_steps = [("pre", preprocessor)]
+    else:
+        # For raw numpy arrays, we can still standard scale
+        base_steps = [("std", StandardScaler())]
+
+    # Calculate approximate d
     d = X_train.shape[1]
-    if d <= budget:
-        pipe = Pipeline([("scale", MinMaxScaler((0, np.pi)))])
+    
+    if d <= budget and not (is_df and len(X_train.select_dtypes(exclude='number').columns) > 0):
+        # fast path for small numeric datasets
+        pipe = Pipeline(base_steps + [("scale", MinMaxScaler((0, np.pi)))])
         pipe.fit(X_train)
         return BudgetPlan(d, d, "scale", None, pipe)
-    if method == "select":  # mutual-information top-k, keeps raw features
+        
+    if method == "select":  # mutual-information top-k
         if y is None:
             raise ValueError('method="select" requires y')
-        pipe = Pipeline([
+        pipe = Pipeline(base_steps + [
             ("select", SelectKBest(mutual_info_classif, k=budget)),
             ("scale", MinMaxScaler((0, np.pi))),
         ])
@@ -46,8 +98,9 @@ def fit_budget(X_train, budget: int = 8, y=None,
         idx = pipe.named_steps["select"].get_support(indices=True)
         return BudgetPlan(d, budget, "select", None, pipe,
                           [int(i) for i in idx])
-    pipe = Pipeline([
-        ("std", StandardScaler()),
+                          
+    # method == "pca"
+    pipe = Pipeline(base_steps + [
         ("pca", PCA(n_components=budget, random_state=0)),
         ("scale", MinMaxScaler((0, np.pi))),
     ])
@@ -66,14 +119,20 @@ def fit_budget_auto(X_train, y, budget: int = 8) -> BudgetPlan:
         return fit_budget(X_train, budget)
     from sklearn.linear_model import LogisticRegression
     from sklearn.model_selection import StratifiedKFold, cross_val_score
+    from sklearn.pipeline import make_pipeline
+    from sklearn.base import clone
 
     cv = StratifiedKFold(5, shuffle=True, random_state=0)
     plans, scores = {}, {}
     for method in ("pca", "select"):
         plans[method] = fit_budget(X_train, budget, y=y, method=method)
+        # Create an unfitted pipeline that includes the preprocessing steps and the classifier
+        # to ensure that feature selection/PCA only learns from the training folds during CV.
+        eval_pipe = make_pipeline(*[clone(step) for name, step in plans[method].pipeline.steps])
+        eval_pipe.steps.append(("clf", LogisticRegression(max_iter=2000)))
+        
         scores[method] = float(np.mean(cross_val_score(
-            LogisticRegression(max_iter=2000),
-            plans[method].transform(X_train), y,
+            eval_pipe, X_train, y,
             cv=cv, scoring="roc_auc")))
     winner = "select" if scores["select"] > scores["pca"] else "pca"
     plan = plans[winner]

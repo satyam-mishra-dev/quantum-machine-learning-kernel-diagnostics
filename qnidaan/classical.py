@@ -33,12 +33,57 @@ def specificity_at_sensitivity(y_true, y_score, target_sens=0.95):
     return float(1 - fpr[ok][0])
 
 
+from sklearn.metrics import (
+    roc_auc_score, roc_curve, precision_recall_curve,
+    precision_score, recall_score, f1_score, confusion_matrix,
+    average_precision_score, accuracy_score
+)
+
 def evaluate(model, Xte, yte):
-    prob = model.predict_proba(Xte)[:, 1]
+    try:
+        prob = model.predict_proba(Xte)[:, 1]
+    except Exception:
+        prob = model.decision_function(Xte)
+        
+    y_pred = (prob >= 0.5).astype(int)
+    
+    fpr, tpr, _ = roc_curve(yte, prob)
+    prec, rec, _ = precision_recall_curve(yte, prob)
+    
+    try:
+        auroc = float(roc_auc_score(yte, prob))
+    except ValueError:
+        auroc = float('nan')
+        
+    try:
+        auprc = float(average_precision_score(yte, prob))
+    except ValueError:
+        auprc = float('nan')
+        
+    cm = confusion_matrix(yte, y_pred, labels=[0,1])
+    if cm.shape == (2,2):
+        tn, fp, fn, tp = cm.ravel()
+        sensitivity = tp / (tp + fn) if (tp+fn) > 0 else 0.0
+        specificity = tn / (tn + fp) if (tn+fp) > 0 else 0.0
+    else:
+        tn, fp, fn, tp = 0, 0, 0, 0
+        sensitivity = 0.0
+        specificity = 0.0
+
     return {
-        "auroc": float(roc_auc_score(yte, prob)),
-        "accuracy": float(((prob >= 0.5).astype(int) == yte).mean()),
-        "spec_at_95sens": specificity_at_sensitivity(yte, prob),
+        "auroc": auroc,
+        "auprc": auprc,
+        "accuracy": float(accuracy_score(yte, y_pred)),
+        "precision": float(precision_score(yte, y_pred, zero_division=0)),
+        "recall": float(recall_score(yte, y_pred, zero_division=0)),
+        "f1": float(f1_score(yte, y_pred, zero_division=0)),
+        "sensitivity": float(sensitivity),
+        "specificity": float(specificity),
+        "spec_at_95sens": float(specificity_at_sensitivity(yte, prob)),
+        "confusion_matrix": {"tn": int(tn), "fp": int(fp), "fn": int(fn), "tp": int(tp)},
+        "roc_curve": {"fpr": fpr[::max(1, len(fpr)//50)].tolist(), "tpr": tpr[::max(1, len(tpr)//50)].tolist()},
+        "pr_curve": {"precision": prec[::max(1, len(prec)//50)].tolist(), "recall": rec[::max(1, len(rec)//50)].tolist()},
+        "sample_count": len(yte)
     }
 
 

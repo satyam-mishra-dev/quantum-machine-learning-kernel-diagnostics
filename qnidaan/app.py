@@ -206,98 +206,128 @@ def predict(name: str, body: PredictIn):
     return rep
 
 
+from concurrent.futures import ProcessPoolExecutor
+import asyncio
+from fastapi.responses import StreamingResponse
+from qnidaan.db import create_job, get_job, get_job_logs
+
+pool = ProcessPoolExecutor(max_workers=2)
+
+from typing import Optional
+
 @app.post("/api/upload")
-def upload(file: UploadFile = File(...), target: str = Form(...),
-           budget: int = Form(8)):
-    from qnidaan.datasets import load_csv
+def upload(target: str = Form(""),
+           budget: int = Form(8),
+           benchmark: Optional[str] = Form(None),
+           file: Optional[UploadFile] = File(None)):
+    from qnidaan.datasets import load_csv, load_image_benchmark
+    from qnidaan.worker import run_adapter_worker
 
     budget = max(1, min(budget, 10))  # a 30-qubit statevector is an OOM
-    raw = file.file.read(5_000_001)
-    if len(raw) > 5_000_000:
-        raise HTTPException(413, "CSV too large (5 MB cap for the demo)")
-    try:
-        X, y, meta = load_csv(io.BytesIO(raw), target)
-    except ValueError as e:
-        raise HTTPException(422, str(e))
-    except Exception:
-        raise HTTPException(422, "could not parse file as CSV")
-    job_id = uuid.uuid4().hex[:8]
-    _jobs[job_id] = {"status": "running", "stage": "ingest", "dataset": meta}
-
-    def work():
+    
+    if benchmark in ["pneumoniamnist", "breastmnist"]:
         try:
-            _jobs[job_id]["result"] = _run_adapter(X, y, meta, budget,
-                                                  _jobs[job_id])
-            _jobs[job_id]["status"] = "done"
-        except Exception as e:  # surface, don't crash the server
-            _jobs[job_id].update(status="error", error=str(e))
+            X, y, meta = load_image_benchmark(benchmark)
+        except Exception as e:
+            raise HTTPException(422, f"could not load benchmark: {e}")
+    else:
+        if not file:
+            raise HTTPException(422, "must provide file or valid benchmark")
+            
+        raw = file.file.read(5_000_001)
+        if len(raw) > 5_000_000:
+            raise HTTPException(413, "File too large (5 MB cap for the demo)")
+            
+        filename = file.filename or ""
+        try:
+            if filename.endswith('.zip'):
+                from qnidaan.datasets import load_zip
+                X, y, meta = load_zip(io.BytesIO(raw), budget)
+            else:
+                X, y, meta = load_csv(io.BytesIO(raw), target)
+        except ValueError as e:
+            raise HTTPException(422, str(e))
+        except Exception:
+            raise HTTPException(422, "could not parse file")
+    
+    job_id = uuid.uuid4().hex[:8]
+    create_job(job_id, meta)
 
-    threading.Thread(target=work, daemon=True).start()
+    # Dispatch to ProcessPoolExecutor
+    future = pool.submit(run_adapter_worker, job_id, X, y, meta, budget)
+    
+    def on_done(f):
+        from qnidaan.db import update_job
+        try:
+            f.result()
+        except Exception as e:
+            update_job(job_id, status="FAILED", stage="FAILED", error=str(e), log_message=f"Worker crashed: {str(e)}")
+            
+    future.add_done_callback(on_done)
+    
     return {"job_id": job_id, "n_samples": len(y),
-            "n_features": meta["n_features"]}
-
-
-def _run_adapter(X, y, meta, budget, job):
-    """Universal adapter: the same pipeline the flagships went through."""
-    from sklearn.model_selection import train_test_split
-
-    from qnidaan.budgeter import fit_budget_auto
-    from qnidaan.classical import evaluate, make_twins
-    from qnidaan.quantum import PQK, QSVM, make_kernel
-    from qnidaan.scout import scout
-
-    Xtr, Xte, ytr, yte = train_test_split(X, y, test_size=0.2,
-                                          random_state=42, stratify=y)
-    capped = len(Xtr) > 600  # QSVM kernel is O(n^2) simulated circuits
-    if capped:
-        rng = np.random.default_rng(42)
-        idx = rng.permutation(len(Xtr))[:600]
-        Xtr, ytr = Xtr[idx], ytr[idx]
-    job["stage"] = "qubit_budget"
-    plan = fit_budget_auto(Xtr, ytr, budget)
-    Ztr, Zte = plan.transform(Xtr), plan.transform(Xte)
-    kernel = make_kernel(plan.n_qubits)
-    job["stage"] = "advantage_scout"
-    out = {
-        "budget": {"n_qubits": plan.n_qubits, "method": plan.method,
-                   "explained_variance": plan.explained_variance,
-                   "cv_auroc": plan.cv_auroc,
-                   "runner_up_cv_auroc": plan.runner_up_cv_auroc},
-        "scout": scout(Ztr, ytr, kernel),
-        "heldout": {},
-        "train_rows_used": int(len(ytr)),
-        "train_rows_capped": capped,
-    }
-    out["readiness"] = readiness(len(y), meta["n_features"],
-                                 float(np.mean(y)), out["scout"],
-                                 out["budget"])
-    models = {**make_twins(), "qsvm": QSVM(n_qubits=plan.n_qubits, C=10),
-              "pqk": PQK(n_qubits=plan.n_qubits)}
-    for mname, m in models.items():
-        job["stage"] = f"training:{mname}"
-        m.fit(Ztr, ytr)
-        out["heldout"][mname] = evaluate(m, Zte, yte)
-    job["stage"] = "verdict"
-    quantum = {"qsvm", "pqk"}
-    auroc = {m: e["auroc"] for m, e in out["heldout"].items()}
-    best = max(auroc, key=auroc.get)
-    best_quantum = max(quantum, key=auroc.get)
-    best_classical_auroc = max(v for m, v in auroc.items() if m not in quantum)
-    out["verdict"] = {
-        "best_model": best,
-        "best_quantum": best_quantum,
-        "quantum_won": best in quantum,
-        "quantum_vs_best_classical": round(
-            auroc[best_quantum] - best_classical_auroc, 4),
-        # backward compat with the frontend
-        "qsvm_vs_best_classical": round(
-            auroc["qsvm"] - best_classical_auroc, 4),
-    }
-    return out
+            "n_features": meta["n_features"], "profile": meta.get("profile")}
 
 
 @app.get("/api/jobs/{job_id}")
 def job(job_id: str):
-    if job_id not in _jobs:
+    j = get_job(job_id)
+    if not j:
         raise HTTPException(404, "no such job")
-    return _jobs[job_id]
+    return j
+
+
+@app.get("/api/jobs/{job_id}/stream")
+async def job_stream(job_id: str):
+    """Server-Sent Events for job status updates."""
+    j = get_job(job_id)
+    if not j:
+        raise HTTPException(404, "no such job")
+
+    async def event_generator():
+        last_log_id = 0
+        while True:
+            current_job = get_job(job_id)
+            if not current_job:
+                break
+                
+            logs = get_job_logs(job_id)
+            for log in logs[last_log_id:]:
+                yield f"data: {json.dumps(log)}\n\n"
+            last_log_id = len(logs)
+            
+            if current_job["status"] in ["COMPLETED", "FAILED", "error", "done"]:
+                # Yield final state just in case
+                yield f"data: {json.dumps({'stage': current_job['stage'], 'status': current_job['status'], 'message': 'Job terminated'})}\n\n"
+                break
+                
+            await asyncio.sleep(1)
+
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
+
+from fastapi.responses import FileResponse
+
+@app.get("/api/jobs/{job_id}/report")
+def get_job_report(job_id: str):
+    j = get_job(job_id)
+    if not j:
+        raise HTTPException(404, "no such job")
+    if j["status"] != "COMPLETED":
+        raise HTTPException(409, "job not completed")
+    run_dir = Path(__file__).resolve().parent.parent / "runs" / f"QF-{job_id}"
+    report_path = run_dir / "report.pdf"
+    if not report_path.exists():
+        raise HTTPException(404, "Report not found")
+    return FileResponse(report_path, filename=f"report_{job_id}.pdf", media_type="application/pdf")
+
+@app.get("/api/jobs/{job_id}/artifacts")
+def get_job_artifacts(job_id: str):
+    j = get_job(job_id)
+    if not j:
+        raise HTTPException(404, "no such job")
+    if j["status"] != "COMPLETED":
+        raise HTTPException(409, "job not completed")
+    zip_path = Path(__file__).resolve().parent.parent / "runs" / f"QuantumFloor_{job_id}.zip"
+    if not zip_path.exists():
+        raise HTTPException(404, "Artifacts zip not found")
+    return FileResponse(zip_path, filename=f"QuantumFloor_{job_id}.zip", media_type="application/zip")
