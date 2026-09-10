@@ -33,14 +33,8 @@ class QuantumBackendManager:
     def get_device(self):
         if self.dev: return self.dev
         
-        if self.token:
-            try:
-                self.dev = qml.device("qiskit.ibmq", wires=self.n_qubits, backend=self.instance, ibmqx_token=self.token)
-                self.execution_mode = f"REAL QPU EXECUTION ({self.instance})"
-                return self.dev
-            except Exception as e:
-                self.error = f"QPU UNAVAILABLE / FALLING BACK TO SIMULATOR ({str(e)})"
-                self.execution_mode = "SIMULATED EXECUTION (Fallback)"
+        # Hardware execution via QPU has been removed to prevent PennyLane 0.45.1 incompatibilities
+        # and limit execution to fast local simulation.
                 
         try:
             self.dev = qml.device("lightning.qubit", wires=self.n_qubits)
@@ -104,21 +98,10 @@ def kernel_matrix(kernel, A, B=None, symmetric=False, callback=None, callback_in
     
     completed = 0
     start_time = time.time()
-    cache = {}
-    
     for i, a in enumerate(A):
         start_j = i if symmetric else 0
         for j in range(start_j, n_b):
-            a_bytes = a.tobytes()
-            b_bytes = B[j].tobytes()
-            key = (a_bytes, b_bytes) if a_bytes < b_bytes else (b_bytes, a_bytes)
-            
-            if key in cache:
-                val = cache[key]
-            else:
-                val = kernel(a, B[j])
-                cache[key] = val
-                
+            val = kernel(a, B[j])
             K[i, j] = val
             if symmetric and i != j:
                 K[j, i] = val  # fill symmetric immediately

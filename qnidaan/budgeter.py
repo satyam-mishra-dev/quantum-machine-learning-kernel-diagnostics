@@ -42,8 +42,7 @@ def _build_preprocessor(X_train):
     transformers = []
     if num_cols:
         num_pipe = Pipeline([
-            ("imputer", SimpleImputer(strategy="median")),
-            ("scaler", StandardScaler())
+            ("imputer", SimpleImputer(strategy="median"))
         ])
         transformers.append(("num", num_pipe, num_cols))
         
@@ -64,19 +63,12 @@ def fit_budget(X_train, budget: int = 8, y=None,
                method: str = "pca") -> BudgetPlan:
     is_df = isinstance(X_train, pd.DataFrame)
     
-    # If it's a DataFrame, the number of features after OHE might expand.
-    # But we can approximate d as the initial columns just for the `d <= budget` fast path
-    # Actually, to be safe with OHE, we should build the preprocessor and see the expanded size.
     preprocessor = _build_preprocessor(X_train)
     
     if preprocessor:
-        # We need to know the expanded size, so let's just fit the preprocessor on a small sample
-        # to determine output shape, or just always run PCA/select if there are categoricals.
-        # For simplicity, we just use the pipeline.
         base_steps = [("pre", preprocessor)]
     else:
-        # For raw numpy arrays, we can still standard scale
-        base_steps = [("std", StandardScaler())]
+        base_steps = []
 
     # Calculate approximate d
     d = X_train.shape[1]

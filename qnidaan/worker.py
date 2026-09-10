@@ -27,7 +27,9 @@ def run_adapter_worker(job_id: str, X, y, meta, budget):
             df_check = pd.DataFrame(X)
             
         # Create deterministic fingerprint for each feature row
-        groups = df_check.apply(lambda row: hash(tuple(row)), axis=1).values
+        # pd.factorize provides a unique integer ID for each unique string representation
+        row_strs = df_check.apply(lambda row: str(tuple(row)), axis=1)
+        groups, _ = pd.factorize(row_strs)
         
         n_total = len(df_check)
         n_unique = len(np.unique(groups))
@@ -48,12 +50,8 @@ def run_adapter_worker(job_id: str, X, y, meta, budget):
                 return False
                 
             integrity_warnings.append(
-                f"Duplicate feature groups: {n_unique} | "
-                f"Duplicate rows: {dup_count} | "
-                f"Cross-split duplicate groups: 0 | "
-                f"Target leakage detected: 0 | "
-                f"Identifier leakage detected: 0 | "
-                f"Preprocessing leakage: 0"
+                f"Duplicate rows detected: {dup_count}. "
+                f"GroupShuffleSplit applied to {n_unique} unique groups to guarantee 0 cross-split leakage."
             )
             update_job(job_id, log_message=f"Integrity: {dup_count} duplicate rows grouped. Cross-split leakage prevented.")
             
@@ -94,6 +92,11 @@ def run_adapter_worker(job_id: str, X, y, meta, budget):
             transformers.append(("num", num_pipe, num_cols))
         if cat_cols:
             transformers.append(("cat", cat_pipe, cat_cols))
+            
+        if not transformers:
+            msg = "No features available after applying column transforms (e.g. all columns were dropped)."
+            update_job(job_id, status="FAILED", stage="FAILED", error=msg, log_message=msg)
+            return False
             
         preprocessor = ColumnTransformer(transformers=transformers, remainder="drop")
         Xtr_pre = preprocessor.fit_transform(Xtr)
@@ -386,8 +389,15 @@ def run_adapter_worker(job_id: str, X, y, meta, budget):
                 if plan.method == "pca" and "pca" in plan.pipeline.named_steps:
                     pca_weights = plan.pipeline.named_steps["pca"].components_[i]
                     top_feats = np.argsort(np.abs(pca_weights))[::-1][:4]
+                    
+                    try:
+                        feature_names_out = preprocessor.get_feature_names_out()
+                    except Exception:
+                        feature_names_out = meta["feature_names"]
+                        
                     comp["original_features"] = [
-                        {"name": meta["feature_names"][fi], "weight": float(np.abs(pca_weights[fi]))}
+                        {"name": feature_names_out[fi] if fi < len(feature_names_out) else f"Feature {fi}", 
+                         "weight": float(np.abs(pca_weights[fi]))}
                         for fi in top_feats
                     ]
                 top_components.append(comp)

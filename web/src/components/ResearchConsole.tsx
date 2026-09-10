@@ -1,29 +1,11 @@
 import { useState, type ReactNode } from 'react';
 import { Badge, Button, Eyebrow, KV } from './ui';
+import { CircuitLab } from './CircuitLab';
 import { MODEL_LABELS, isQuantum } from '../lib/api';
 import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-} from 'chart.js';
-import { Line, Bar } from 'react-chartjs-2';
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend
-);
+  BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer,
+  LineChart, Line as RechartsLine, Legend as RechartsLegend, CartesianGrid, Cell
+} from 'recharts';
 
 export function ResearchConsole({ result, jobId: propJobId, profile }: { result: any, jobId?: string | null, profile?: any }): ReactNode {
   const [tab, setTab] = useState<'overview' | 'analytics' | 'explainability' | 'circuit'>('overview');
@@ -116,68 +98,84 @@ export function ResearchConsole({ result, jobId: propJobId, profile }: { result:
   );
 
   const renderAnalytics = () => {
-    // Collect ROC data for all models
-    const rocDatasets = Object.entries(heldout).filter(([m, e]: [string, any]) => e.roc_curve).map(([m, e]: [string, any]) => ({
-      label: MODEL_LABELS[m] ?? m,
-      data: e.roc_curve.fpr.map((fprVal: number, i: number) => ({ x: fprVal, y: e.roc_curve.tpr[i] })),
-      borderColor: isQuantum(m) ? '#8a2be2' : '#666',
-      borderDash: isQuantum(m) ? [] : [5, 5],
-      borderWidth: isQuantum(m) ? 2 : 1,
-      fill: false,
-      pointRadius: 0
+    const safeHeldout = heldout || {};
+    
+    // AUROC Data
+    const aurocData = Object.entries(safeHeldout).map(([m, e]: [string, any]) => ({
+      name: MODEL_LABELS[m] ?? m,
+      auroc: e.auroc || 0,
+      isQuantum: isQuantum(m),
+      fill: isQuantum(m) ? '#8a2be2' : '#666'
     }));
-    rocDatasets.push({
-      label: 'Random', data: [{x:0, y:0}, {x:1, y:1}], borderColor: '#444', borderDash: [2, 2], borderWidth: 1, fill: false, pointRadius: 0
+
+    // Generate ROC and PR curves for Recharts (merge data points by an X-axis)
+    // To make multiple lines work easily in Recharts without identical X values, 
+    // we can use separate Line series with their own data array.
+    const rocLines = Object.entries(safeHeldout).filter(([m, e]: [string, any]) => e.roc_curve).map(([m, e]: [string, any]) => {
+      const data = e.roc_curve.fpr.map((fprVal: number, i: number) => ({ x: fprVal, y: e.roc_curve.tpr[i] }));
+      return { key: m, name: MODEL_LABELS[m] ?? m, data, isQuantum: isQuantum(m) };
     });
     
-    // Collect PR data for all models
-    const prDatasets = Object.entries(heldout).filter(([m, e]: [string, any]) => e.pr_curve).map(([m, e]: [string, any]) => ({
-      label: MODEL_LABELS[m] ?? m,
-      data: e.pr_curve.recall.map((rVal: number, i: number) => ({ x: rVal, y: e.pr_curve.precision[i] })),
-      borderColor: isQuantum(m) ? '#8a2be2' : '#666',
-      borderDash: isQuantum(m) ? [] : [5, 5],
-      borderWidth: isQuantum(m) ? 2 : 1,
-      fill: false,
-      pointRadius: 0
-    }));
-
-    const aurocLabels = Object.keys(heldout).map(m => MODEL_LABELS[m] ?? m);
-    const aurocData = Object.keys(heldout).map(m => heldout[m].auroc || 0);
-    const aurocColors = Object.keys(heldout).map(m => isQuantum(m) ? '#8a2be2' : '#666');
-
-    const aurocChartData = {
-      labels: aurocLabels,
-      datasets: [{
-        label: 'AUROC',
-        data: aurocData,
-        backgroundColor: aurocColors,
-      }]
-    };
+    const prLines = Object.entries(safeHeldout).filter(([m, e]: [string, any]) => e.pr_curve).map(([m, e]: [string, any]) => {
+      const data = e.pr_curve.recall.map((rVal: number, i: number) => ({ x: rVal, y: e.pr_curve.precision[i] }));
+      // Sort PR curve by recall (x) ascending for recharts
+      data.sort((a: any, b: any) => a.x - b.x);
+      return { key: m, name: MODEL_LABELS[m] ?? m, data, isQuantum: isQuantum(m) };
+    });
 
     return (
       <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
         <Eyebrow>Model Evaluation & Visual Analytics</Eyebrow>
         
         <div className="mt-4 bg-paper p-4 border border-rule rounded-sm h-[300px] max-w-4xl">
-          <Bar 
-            options={{ responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: 'AUROC Model Comparison', color: '#fff' }, legend: { display: false } }, scales: { y: { min: 0, max: 1, grid: { color: '#333' }, ticks: { color: '#bbb' } }, x: { grid: { display: false }, ticks: { color: '#bbb' } } } }} 
-            data={aurocChartData} 
-          />
+          <h4 className="text-center text-[#fff] text-sm font-bold mb-2">AUROC Model Comparison</h4>
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={aurocData} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#333" vertical={false} />
+              <XAxis dataKey="name" stroke="#bbb" tick={{fill: '#bbb', fontSize: 12}} />
+              <YAxis domain={[0, 1]} stroke="#bbb" tick={{fill: '#bbb', fontSize: 12}} />
+              <RechartsTooltip contentStyle={{backgroundColor: '#111', borderColor: '#333'}} itemStyle={{color: '#fff'}} />
+              <Bar dataKey="auroc" radius={[2, 2, 0, 0]}>
+                {aurocData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.fill} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
         </div>
 
         <div className="mt-6 grid gap-6 md:grid-cols-2">
            <div className="bg-paper p-4 border border-rule rounded-sm h-[300px]">
-             <Line 
-               options={{ responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: 'ROC Curve', color: '#fff' }, legend: { labels: { color: '#bbb' } } }, scales: { x: { type: 'linear', position: 'bottom', title: { display: true, text: 'False Positive Rate', color: '#bbb' }, grid: { color: '#333' }, ticks: { color: '#bbb' } }, y: { title: { display: true, text: 'True Positive Rate', color: '#bbb' }, grid: { color: '#333' }, ticks: { color: '#bbb' } } } }} 
-               data={{ datasets: rocDatasets }} 
-             />
+             <h4 className="text-center text-[#fff] text-sm font-bold mb-2">ROC Curve</h4>
+             <ResponsiveContainer width="100%" height="100%">
+               <LineChart margin={{ top: 5, right: 10, left: -20, bottom: 15 }}>
+                 <CartesianGrid strokeDasharray="3 3" stroke="#333" />
+                 <XAxis type="number" dataKey="x" domain={[0, 1]} stroke="#bbb" tick={{fill: '#bbb', fontSize: 10}} label={{ value: 'False Positive Rate', position: 'insideBottom', offset: -10, fill: '#bbb' }} />
+                 <YAxis type="number" dataKey="y" domain={[0, 1]} stroke="#bbb" tick={{fill: '#bbb', fontSize: 10}} label={{ value: 'True Positive Rate', angle: -90, position: 'insideLeft', fill: '#bbb' }} />
+                 <RechartsTooltip contentStyle={{backgroundColor: '#111', borderColor: '#333'}} />
+                 <RechartsLegend wrapperStyle={{fontSize: '11px', color: '#bbb'}} />
+                 {rocLines.map((line) => (
+                   <RechartsLine key={line.key} type="monotone" dataKey="y" data={line.data} name={line.name} stroke={line.isQuantum ? '#8a2be2' : '#666'} strokeWidth={line.isQuantum ? 2 : 1} strokeDasharray={line.isQuantum ? "" : "5 5"} dot={false} />
+                 ))}
+                 <RechartsLine name="Random" data={[{x:0, y:0}, {x:1, y:1}]} type="linear" dataKey="y" stroke="#444" strokeWidth={1} strokeDasharray="2 2" dot={false} />
+               </LineChart>
+             </ResponsiveContainer>
            </div>
            
            <div className="bg-paper p-4 border border-rule rounded-sm h-[300px]">
-             <Line 
-               options={{ responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: 'Precision-Recall Curve', color: '#fff' }, legend: { labels: { color: '#bbb' } } }, scales: { x: { type: 'linear', position: 'bottom', title: { display: true, text: 'Recall', color: '#bbb' }, grid: { color: '#333' }, ticks: { color: '#bbb' } }, y: { title: { display: true, text: 'Precision', color: '#bbb' }, grid: { color: '#333' }, ticks: { color: '#bbb' } } } }} 
-               data={{ datasets: prDatasets }} 
-             />
+             <h4 className="text-center text-[#fff] text-sm font-bold mb-2">Precision-Recall Curve</h4>
+             <ResponsiveContainer width="100%" height="100%">
+               <LineChart margin={{ top: 5, right: 10, left: -20, bottom: 15 }}>
+                 <CartesianGrid strokeDasharray="3 3" stroke="#333" />
+                 <XAxis type="number" dataKey="x" domain={[0, 1]} stroke="#bbb" tick={{fill: '#bbb', fontSize: 10}} label={{ value: 'Recall', position: 'insideBottom', offset: -10, fill: '#bbb' }} />
+                 <YAxis type="number" dataKey="y" domain={[0, 1]} stroke="#bbb" tick={{fill: '#bbb', fontSize: 10}} label={{ value: 'Precision', angle: -90, position: 'insideLeft', fill: '#bbb' }} />
+                 <RechartsTooltip contentStyle={{backgroundColor: '#111', borderColor: '#333'}} />
+                 <RechartsLegend wrapperStyle={{fontSize: '11px', color: '#bbb'}} />
+                 {prLines.map((line) => (
+                   <RechartsLine key={line.key} type="monotone" dataKey="y" data={line.data} name={line.name} stroke={line.isQuantum ? '#8a2be2' : '#666'} strokeWidth={line.isQuantum ? 2 : 1} strokeDasharray={line.isQuantum ? "" : "5 5"} dot={false} />
+                 ))}
+               </LineChart>
+             </ResponsiveContainer>
            </div>
         </div>
 
@@ -198,7 +196,7 @@ export function ResearchConsole({ result, jobId: propJobId, profile }: { result:
               </tr>
             </thead>
             <tbody>
-              {Object.entries(heldout).map(([m, e]: [string, any]) => (
+              {Object.entries(safeHeldout).map(([m, e]: [string, any]) => (
                 <tr key={m} className="border-b border-rule/30 hover:bg-white/5 transition-colors">
                   <td className="py-2 pr-4 font-medium text-ink">{MODEL_LABELS[m] ?? m}</td>
                   <td className="py-2 px-3">{isQuantum(m) ? <Badge tone="quantum">Quantum</Badge> : <Badge tone="base">Classical</Badge>}</td>
@@ -219,8 +217,8 @@ export function ResearchConsole({ result, jobId: propJobId, profile }: { result:
            <div className="bg-paper p-4 border border-rule rounded-sm">
              <h4 className="font-semibold text-sm mb-4 text-quantum-wash">Confusion Matrix (Best Quantum Model)</h4>
              {(() => {
-                const bq = verdict.best_quantum;
-                const cm = heldout[bq]?.confusion_matrix;
+                const bq = verdict?.best_quantum;
+                const cm = (safeHeldout)[bq]?.confusion_matrix;
                 if (!cm) return <div className="text-xs text-ink-60 mt-2">Not available</div>;
                 return (
                   <div className="grid grid-cols-3 gap-1 text-center text-xs mt-4 max-w-[300px]">
@@ -379,29 +377,7 @@ export function ResearchConsole({ result, jobId: propJobId, profile }: { result:
         {tab === 'explainability' && renderExplainability()}
         {tab === 'circuit' && circuit && (
           <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
-             <div className="flex justify-between items-center mb-4">
-               <Eyebrow className="text-quantum">Quantum Circuit Topology</Eyebrow>
-               <Badge tone="quantum">{circuit.execution_type}</Badge>
-             </div>
-             <div className="grid grid-cols-3 gap-4 mb-4">
-                <div className="bg-wash/40 p-3 rounded-sm border border-rule">
-                  <div className="text-xs text-ink-60">Ansatz</div>
-                  <div className="text-sm font-mono mt-1">{circuit.ansatz}</div>
-                </div>
-                <div className="bg-wash/40 p-3 rounded-sm border border-rule">
-                  <div className="text-xs text-ink-60">Depth</div>
-                  <div className="text-sm font-mono mt-1">{circuit.depth} layers</div>
-                </div>
-                <div className="bg-wash/40 p-3 rounded-sm border border-rule">
-                  <div className="text-xs text-ink-60">Operations</div>
-                  <div className="text-sm font-mono mt-1">{circuit.num_operations} total gates</div>
-                </div>
-             </div>
-             <div className="overflow-x-auto bg-[#0d1117] p-4 rounded-sm border border-quantum/30">
-               <pre className="font-mono text-[12px] leading-[14px] text-quantum-wash">
-                 {circuit.drawing}
-               </pre>
-             </div>
+             <CircuitLab circuit={circuit} stage="COMPLETED" />
           </div>
         )}
         

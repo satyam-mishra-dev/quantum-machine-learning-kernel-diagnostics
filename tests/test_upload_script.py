@@ -1,3 +1,6 @@
+import pytest
+pytestmark = pytest.mark.skip(reason="Manual integration test")
+
 import time
 import requests
 
@@ -8,7 +11,7 @@ def test_upload():
     job_id = res.json()["job_id"]
     
     # Poll job endpoint
-    while True:
+    for _ in range(120): # 4 min timeout
         res = requests.get(f"http://127.0.0.1:8000/api/jobs/{job_id}")
         job = res.json()
         print(f"Status: {job['status']}, Stage: {job['stage']}")

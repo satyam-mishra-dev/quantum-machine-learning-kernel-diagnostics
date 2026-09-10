@@ -17,3 +17,4 @@ shap==0.52.0
 torch==2.13.0
 uvicorn==0.52.4
 fpdf2
+opencv-python-headless

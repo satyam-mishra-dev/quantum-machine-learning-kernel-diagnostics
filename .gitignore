@@ -29,3 +29,5 @@ jobs.db
 runs/
 models/
 scratch/
+*.db
+scratch_load.py
