@@ -211,7 +211,7 @@ import asyncio
 from fastapi.responses import StreamingResponse
 from qnidaan.db import create_job, get_job, get_job_logs
 
-pool = ProcessPoolExecutor(max_workers=2)
+pool = ProcessPoolExecutor(max_workers=1)
 
 from typing import Optional
 

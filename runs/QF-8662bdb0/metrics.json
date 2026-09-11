@@ -1,0 +1,66 @@
+{
+  "budget": {
+    "n_qubits": 4,
+    "method": "select",
+    "explained_variance": null,
+    "cv_auroc": 0.873,
+    "runner_up_cv_auroc": 0.8102
+  },
+  "scout": {
+    "n_scouted": 100,
+    "kta_quantum": 0.18119688542712825,
+    "kta_classical": 0.20526314144543636,
+    "g_asym": 20.600789714992505,
+    "g_huang_naive_reg": 3.820820950228296,
+    "g_threshold_sqrt_n": 10.0,
+    "g_ratio": 2.0600789714992507,
+    "verdict": "advantage_possible",
+    "quantum_worth_trying": true
+  },
+  "heldout": {
+    "logreg": {
+      "auroc": 0.865211810012837,
+      "accuracy": 0.8333333333333334,
+      "spec_at_95sens": 0.5121951219512195
+    },
+    "svm_rbf": {
+      "auroc": 0.8703465982028242,
+      "accuracy": 0.8166666666666667,
+      "spec_at_95sens": 0.5853658536585367
+    },
+    "random_forest": {
+      "auroc": 0.8883183568677792,
+      "accuracy": 0.8333333333333334,
+      "spec_at_95sens": 0.3902439024390244
+    },
+    "qsvm": {
+      "auroc": 0.8741976893453145,
+      "accuracy": 0.8,
+      "spec_at_95sens": 0.6097560975609756
+    },
+    "pqk": {
+      "auroc": 0.8857509627727856,
+      "accuracy": 0.7666666666666667,
+      "spec_at_95sens": 0.3902439024390244
+    }
+  },
+  "train_rows_used": 239,
+  "train_rows_capped": false,
+  "readiness": {
+    "overall": 95.8,
+    "subscores": {
+      "small_data_fit": 100.0,
+      "compressibility": 100.0,
+      "quantum_geometry": 100.0,
+      "class_balance": 72.2
+    },
+    "verdict_text": "Good candidate: the scout sees kernel structure a classical kernel may miss \u2014 worth benchmarking on real hardware."
+  },
+  "verdict": {
+    "best_model": "random_forest",
+    "best_quantum": "pqk",
+    "quantum_won": false,
+    "quantum_vs_best_classical": -0.0026,
+    "qsvm_vs_best_classical": -0.0141
+  }
+}

@@ -93,6 +93,7 @@ def fit_budget(X_train, budget: int = 8, y=None,
                           
     # method == "pca"
     pipe = Pipeline(base_steps + [
+        ("std", StandardScaler()),
         ("pca", PCA(n_components=budget, random_state=0)),
         ("scale", MinMaxScaler((0, np.pi))),
     ])

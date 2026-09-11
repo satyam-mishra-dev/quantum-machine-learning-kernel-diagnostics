@@ -1,0 +1,55 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<title>QuantumFloor Report - 0b131998</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 40px auto; max-width: 800px; line-height: 1.6; color: #333; }
+  h1, h2, h3 { color: #111; }
+  .card { border: 1px solid #ddd; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+  .metric { display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding: 8px 0; }
+  pre { background: #f4f4f4; padding: 10px; border-radius: 4px; overflow-x: auto; }
+  .quantum { color: #8a2be2; font-weight: bold; }
+  .badge { background: #eee; padding: 2px 6px; border-radius: 4px; font-size: 12px; }
+</style>
+</head>
+<body>
+
+<h1>QuantumFloor Execution Report</h1>
+<p><strong>Job ID:</strong> 0b131998</p>
+
+<div class="card">
+  <h2>Dataset Intelligence</h2>
+  <div class="metric"><span>Modality</span> <span>TABULAR</span></div>
+  <div class="metric"><span>Total Rows</span> <span>0</span></div>
+  <div class="metric"><span>Total Columns</span> <span>13</span></div>
+  <div class="metric"><span>Missing Values</span> <span>0.0%</span></div>
+  <div class="metric"><span>Leakage Risk Detected</span> <span>0</span></div>
+</div>
+
+<div class="card">
+  <h2>Execution Plan</h2>
+  <div class="metric"><span>Qubit Budget</span> <span>2</span></div>
+  <div class="metric"><span>Reduction Method</span> <span>pca</span></div>
+  <div class="metric"><span>Quantum Scout Verdict</span> <span>advantage_possible</span></div>
+  <div class="metric"><span>Quantum Execution Backend</span> <span class="badge">SIMULATED EXECUTION</span></div>
+</div>
+
+<div class="card">
+  <h2>Final Verdict</h2>
+  <div class="metric"><span>Best Model</span> <span>random_forest</span></div>
+  <div class="metric"><span>Best Quantum</span> <span class="quantum">vqc</span></div>
+  <div class="metric"><span>Quantum vs Best Classical</span> <span>-0.04</span></div>
+</div>
+
+<div class="card">
+  <h2>Circuit Topology</h2>
+  <pre>0: ─╭AngleEmbedding(M0)─╭IsingZZ(0.00)─┤ ╭Probs
+1: ─╰AngleEmbedding(M0)─╰IsingZZ(0.00)─┤ ╰Probs
+
+M0 = 
+[0. 0.]</pre>
+</div>
+
+</body>
+</html>

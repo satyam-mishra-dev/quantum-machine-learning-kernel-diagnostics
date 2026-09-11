@@ -1,0 +1,53 @@
+{
+  "type": "Surrogate Classical Explainability",
+  "model_used": "Matched Random Forest on PCA latent space",
+  "disclaimer": "These are surrogate attributions on the compressed latent space \u2014 not direct quantum circuit attributions.",
+  "n_components": 2,
+  "status": "available",
+  "top_components": [
+    {
+      "component": "PC2",
+      "importance": 0.22620391312029636,
+      "original_features": [
+        {
+          "name": "num__feat_2",
+          "weight": 0.7113450423445431
+        },
+        {
+          "name": "num__feat_4",
+          "weight": 0.6744499204989416
+        },
+        {
+          "name": "num__feat_1",
+          "weight": 0.13123620365912175
+        },
+        {
+          "name": "num__feat_0",
+          "weight": 0.12250798148904046
+        }
+      ]
+    },
+    {
+      "component": "PC1",
+      "importance": 0.16067755900656686,
+      "original_features": [
+        {
+          "name": "num__feat_1",
+          "weight": 0.6667623481584714
+        },
+        {
+          "name": "num__feat_0",
+          "weight": 0.64176960727589
+        },
+        {
+          "name": "num__feat_3",
+          "weight": 0.3717482810062579
+        },
+        {
+          "name": "num__feat_2",
+          "weight": 0.0713707432459176
+        }
+      ]
+    }
+  ]
+}

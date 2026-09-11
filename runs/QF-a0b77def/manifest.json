@@ -1,0 +1,17 @@
+{
+  "job_id": "a0b77def",
+  "timestamp": "2026-09-10T13:36:43.160155",
+  "dataset": "Uploaded dataset",
+  "models_generated": [
+    "logreg",
+    "svm_rbf",
+    "random_forest",
+    "qsvm",
+    "pqk",
+    "vqc"
+  ],
+  "models_failed": [],
+  "execution_backend": "SIMULATED EXECUTION",
+  "qubit_budget": 2,
+  "quantum_subset_size": 32
+}
