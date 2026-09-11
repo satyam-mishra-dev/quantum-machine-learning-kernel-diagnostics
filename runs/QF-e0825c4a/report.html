@@ -1,0 +1,129 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<title>QuantumFloor Report - e0825c4a</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 40px auto; max-width: 900px; line-height: 1.6; color: #333; }
+  h1, h2, h3 { color: #111; }
+  .card { border: 1px solid #e2e8f0; padding: 24px; border-radius: 8px; margin-bottom: 24px; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1); }
+  .metric { display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding: 12px 0; }
+  .metric:last-child { border-bottom: none; padding-bottom: 0; }
+  pre { background: #f8fafc; padding: 16px; border-radius: 6px; overflow-x: auto; font-size: 13px; }
+  .quantum { color: #8a2be2; font-weight: bold; }
+  .badge { background: #e2e8f0; padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+  .badge-quantum { background: #f3e8ff; color: #7e22ce; padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+  .table-container { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+  th, td { text-align: left; padding: 12px; border-bottom: 1px solid #e2e8f0; }
+  th { background: #f8fafc; font-weight: 600; }
+  .text-sm { font-size: 14px; color: #64748b; }
+</style>
+</head>
+<body>
+
+<h1>QUANTUMFLOOR<br><span class="text-sm">Computational Research Report</span></h1>
+<p><strong>Job ID:</strong> e0825c4a</p>
+
+<div class="card">
+  <h2>1. Executive Summary</h2>
+  <p>This report details the execution of the QuantumFloor diagnostic pipeline on dataset <strong>target</strong>. The system evaluated multiple classical baselines against quantum algorithms to determine the optimal strategy.</p>
+</div>
+
+<div class="card">
+  <h2>2. Dataset Intelligence</h2>
+  <div class="metric"><span>Modality</span> <span>TABULAR</span></div>
+  <div class="metric"><span>Total Rows</span> <span>1025</span></div>
+  <div class="metric"><span>Unique Rows</span> <span>302</span></div>
+  <div class="metric"><span>Duplicate Rows</span> <span>723</span></div>
+  <div class="metric"><span>Total Columns</span> <span>13</span></div>
+  <div class="metric"><span>Missing Values</span> <span>0.0%</span></div>
+  <div class="metric"><span>Leakage Risk Detected</span> <span>0</span></div>
+</div>
+
+<div class='card' style='border-color:#f59e0b;background:#fffbeb'><h2>⚠ Scientific Integrity Warnings</h2><p><strong>Warning:</strong> DUPLICATE WARNING: 723/1025 rows (70.5%) are exact duplicates. This dataset contains only 302 unique samples. Duplicate rows split across train/test sets can cause artificially high metrics.</p><p><strong>Full-Feature Classical AUROC = 1.0000 flagged:</strong> Duplicate rows in this dataset may inflate metrics when identical samples appear in both train and test splits. Matched-classical/quantum results below use stratified subsampling and are not affected.</p></div>
+
+<div class="card">
+  <h2>3. Data Preparation</h2>
+  <div class="metric"><span>Train/Test Split</span> <span>80/20 Stratified</span></div>
+  <div class="metric"><span>Preprocessing</span> <span>Pipeline (Imputation + Scaling)</span></div>
+  <div class="metric"><span>Leakage Protection</span> <span>Enforced</span></div>
+</div>
+
+<div class="card">
+  <h2>4. Computational Plan</h2>
+  <div class="metric"><span>Original Features</span> <span>13</span></div>
+  <div class="metric"><span>Selected Features</span> <span>1</span></div>
+  <div class="metric"><span>Qubit Budget</span> <span>1</span></div>
+  <div class="metric"><span>Classical Training Size</span> <span>820</span></div>
+  <div class="metric"><span>Quantum Subset Size</span> <span>120</span></div>
+</div>
+
+<div class="card">
+  <h2>5. Quantum Execution</h2>
+  <div class="metric"><span>Execution Backend</span> <span class="badge-quantum">SIMULATED EXECUTION</span></div>
+  <div class="metric"><span>Ansatz</span> <span>AngleEmbedding + IsingZZ</span></div>
+  <div class="metric"><span>Qubits</span> <span>1</span></div>
+  <div class="metric"><span>Circuit Depth</span> <span>1</span></div>
+  <div class="metric"><span>Total Operations</span> <span>1</span></div>
+</div>
+
+<div class="card">
+  <h2>6 & 7. Classical vs Quantum Baselines</h2>
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th>Model</th>
+          <th>Type</th>
+          <th>AUROC</th>
+          <th>F1 Score</th>
+          <th>Spec @ 95% Sens</th>
+        </tr>
+      </thead>
+      <tbody>
+        
+      <table>
+        <thead>
+          <tr>
+            <th>Model</th><th>Type</th><th>AUROC</th><th>F1 Score</th><th>Spec @ 95% Sens</th><th>Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+    <tr><td>full_feature_classical ⚠</td><td><span class='badge'>Classical</span></td><td>1.0000</td><td>1.0000</td><td>1.0000</td><td>AUROC=1.000 detected with duplicate rows present. This metric is likely inflated due to duplicate samples in train/test split. Dataset has only 302 unique rows.</td></tr><tr><td>logreg</td><td><span class='badge'>Classical</span></td><td>0.9009</td><td>0.8458</td><td>0.5700</td><td></td></tr><tr><td>svm_rbf</td><td><span class='badge'>Classical</span></td><td>0.8404</td><td>0.8255</td><td>0.5700</td><td></td></tr><tr><td>random_forest</td><td><span class='badge'>Classical</span></td><td>0.8621</td><td>0.8000</td><td>0.5000</td><td></td></tr><tr><td>qsvm</td><td><span class='badge-quantum'>Quantum</span></td><td>0.8840</td><td>0.8319</td><td>0.5700</td><td></td></tr><tr><td>pqk</td><td><span class='badge-quantum'>Quantum</span></td><td>0.8969</td><td>0.8398</td><td>0.5700</td><td></td></tr><tr><td>vqc</td><td><span class='badge-quantum'>Quantum</span></td><td>0.9009</td><td>0.8458</td><td>0.5700</td><td></td></tr></tbody></table>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="card">
+  <h2>8. Classical vs Quantum Comparison</h2>
+  <div class="metric"><span>Best Classical AUROC</span> <span>0.9009</span></div>
+  <div class="metric"><span>Best Quantum AUROC</span> <span>0.9009</span></div>
+  <div class="metric"><span>Delta (Quantum - Classical)</span> <span>0.0</span></div>
+</div>
+
+<div class="card">
+  <h2>9. Explainability</h2>
+  <div class="metric"><span>Strategy</span> <span>Surrogate Classical Explainability</span></div>
+  <div class="metric"><span>Status</span> <span>AVAILABLE</span></div>
+  <p><em>These are surrogate attributions on the compressed latent space — not direct quantum circuit attributions.</em></p><ul><li>PC1: 0.4013</li></ul>
+</div>
+
+<div class="card">
+  <h2>10. Circuit Lab</h2>
+  <p class="text-sm">Raw PennyLane Circuit Representation</p>
+  <pre>0: ──AngleEmbedding(M0)─┤  Probs
+
+M0 = 
+[0.]</pre>
+</div>
+
+<div class="card">
+  <h2>11. Final Verdict</h2>
+  <div class="metric"><span>Best Overall Model</span> <span>logreg</span></div>
+  <div class="metric"><span>Quantum Advantage Detected?</span> <span>No</span></div>
+</div>
+
+</body>
+</html>

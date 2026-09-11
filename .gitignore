@@ -26,8 +26,6 @@ dist/
 !web/public/samples/*.csv
 web/tsconfig.tsbuildinfo
 jobs.db
-runs/
-models/
 scratch/
 *.db
 scratch_load.py

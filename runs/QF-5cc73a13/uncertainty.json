@@ -1,0 +1,116 @@
+{
+  "logreg": {
+    "conformal_qhat": 0.8025538597023303,
+    "coverage_target": 0.9,
+    "prediction_sets": [
+      [
+        1,
+        1
+      ],
+      [
+        1,
+        1
+      ],
+      [
+        1,
+        1
+      ]
+    ],
+    "status": "available"
+  },
+  "svm_rbf": {
+    "conformal_qhat": 0.5245403663779866,
+    "coverage_target": 0.9,
+    "prediction_sets": [
+      [
+        0,
+        1
+      ],
+      [
+        1,
+        0
+      ],
+      [
+        1,
+        0
+      ]
+    ],
+    "status": "available"
+  },
+  "random_forest": {
+    "conformal_qhat": 0.53,
+    "coverage_target": 0.9,
+    "prediction_sets": [
+      [
+        0,
+        1
+      ],
+      [
+        1,
+        0
+      ],
+      [
+        1,
+        0
+      ]
+    ],
+    "status": "available"
+  },
+  "qsvm": {
+    "conformal_qhat": 0.5668589828342797,
+    "coverage_target": 0.9,
+    "prediction_sets": [
+      [
+        0,
+        1
+      ],
+      [
+        1,
+        1
+      ],
+      [
+        1,
+        1
+      ]
+    ],
+    "status": "available"
+  },
+  "pqk": {
+    "conformal_qhat": 0.5500383544612173,
+    "coverage_target": 0.9,
+    "prediction_sets": [
+      [
+        0,
+        1
+      ],
+      [
+        1,
+        1
+      ],
+      [
+        1,
+        1
+      ]
+    ],
+    "status": "available"
+  },
+  "vqc": {
+    "conformal_qhat": 0.9281212965143287,
+    "coverage_target": 0.9,
+    "prediction_sets": [
+      [
+        1,
+        1
+      ],
+      [
+        1,
+        1
+      ],
+      [
+        1,
+        1
+      ]
+    ],
+    "status": "available"
+  }
+}

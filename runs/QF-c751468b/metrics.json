@@ -1,0 +1,771 @@
+{
+  "job_id": "c751468b",
+  "budget": {
+    "n_qubits": 2,
+    "method": "pca",
+    "explained_variance": 0.5353971769619081,
+    "cv_auroc": 0.6056,
+    "runner_up_cv_auroc": 0.5833,
+    "n_features_in": 5
+  },
+  "scout": {
+    "n_scouted": 32,
+    "kta_quantum": 0.042303110315858254,
+    "kta_classical": 0.030851380861832006,
+    "g_asym": 284.3798872626364,
+    "g_huang_naive_reg": 3.7903306169127866,
+    "g_threshold_sqrt_n": 5.656854249492381,
+    "g_ratio": 50.271736679119016,
+    "verdict": "classical_will_match",
+    "quantum_worth_trying": false
+  },
+  "heldout": {
+    "full_feature_classical": {
+      "auroc": 0.4375,
+      "auprc": 0.625,
+      "accuracy": 0.5,
+      "precision": 0.5,
+      "recall": 0.5,
+      "f1": 0.5,
+      "sensitivity": 0.5,
+      "specificity": 0.5,
+      "spec_at_95sens": 0.0,
+      "confusion_matrix": {
+        "tn": 2,
+        "fp": 2,
+        "fn": 2,
+        "tp": 2
+      },
+      "roc_curve": {
+        "fpr": [
+          0.0,
+          0.0,
+          0.5,
+          0.5,
+          0.75,
+          0.75,
+          1.0,
+          1.0
+        ],
+        "tpr": [
+          0.0,
+          0.25,
+          0.25,
+          0.5,
+          0.5,
+          0.75,
+          0.75,
+          1.0
+        ]
+      },
+      "pr_curve": {
+        "precision": [
+          0.5,
+          0.42857142857142855,
+          0.5,
+          0.4,
+          0.5,
+          0.3333333333333333,
+          0.5,
+          1.0,
+          1.0
+        ],
+        "recall": [
+          1.0,
+          0.75,
+          0.75,
+          0.5,
+          0.5,
+          0.25,
+          0.25,
+          0.25,
+          0.0
+        ]
+      },
+      "sample_count": 8
+    },
+    "logreg": {
+      "auroc": 0.375,
+      "auprc": 0.6,
+      "accuracy": 0.5,
+      "precision": 0.5,
+      "recall": 0.25,
+      "f1": 0.3333333333333333,
+      "sensitivity": 0.25,
+      "specificity": 0.75,
+      "spec_at_95sens": 0.0,
+      "confusion_matrix": {
+        "tn": 3,
+        "fp": 1,
+        "fn": 3,
+        "tp": 1
+      },
+      "roc_curve": {
+        "fpr": [
+          0.0,
+          0.0,
+          0.75,
+          0.75,
+          1.0,
+          1.0
+        ],
+        "tpr": [
+          0.0,
+          0.25,
+          0.25,
+          0.75,
+          0.75,
+          1.0
+        ]
+      },
+      "pr_curve": {
+        "precision": [
+          0.5,
+          0.42857142857142855,
+          0.5,
+          0.4,
+          0.25,
+          0.3333333333333333,
+          0.5,
+          1.0,
+          1.0
+        ],
+        "recall": [
+          1.0,
+          0.75,
+          0.75,
+          0.5,
+          0.25,
+          0.25,
+          0.25,
+          0.25,
+          0.0
+        ]
+      },
+      "sample_count": 8
+    },
+    "svm_rbf": {
+      "auroc": 0.375,
+      "auprc": 0.5238095238095237,
+      "accuracy": 0.375,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "sensitivity": 0.0,
+      "specificity": 0.75,
+      "spec_at_95sens": 0.0,
+      "confusion_matrix": {
+        "tn": 3,
+        "fp": 1,
+        "fn": 4,
+        "tp": 0
+      },
+      "roc_curve": {
+        "fpr": [
+          0.0,
+          0.25,
+          0.25,
+          1.0,
+          1.0
+        ],
+        "tpr": [
+          0.0,
+          0.0,
+          0.5,
+          0.5,
+          1.0
+        ]
+      },
+      "pr_curve": {
+        "precision": [
+          0.5,
+          0.42857142857142855,
+          0.3333333333333333,
+          0.4,
+          0.5,
+          0.6666666666666666,
+          0.5,
+          0.0,
+          1.0
+        ],
+        "recall": [
+          1.0,
+          0.75,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.25,
+          0.0,
+          0.0
+        ]
+      },
+      "sample_count": 8
+    },
+    "random_forest": {
+      "auroc": 0.4375,
+      "auprc": 0.6178571428571429,
+      "accuracy": 0.375,
+      "precision": 0.4,
+      "recall": 0.5,
+      "f1": 0.4444444444444444,
+      "sensitivity": 0.5,
+      "specificity": 0.25,
+      "spec_at_95sens": 0.25,
+      "confusion_matrix": {
+        "tn": 1,
+        "fp": 3,
+        "fn": 2,
+        "tp": 2
+      },
+      "roc_curve": {
+        "fpr": [
+          0.0,
+          0.0,
+          0.75,
+          0.75,
+          1.0
+        ],
+        "tpr": [
+          0.0,
+          0.25,
+          0.25,
+          1.0,
+          1.0
+        ]
+      },
+      "pr_curve": {
+        "precision": [
+          0.5,
+          0.5714285714285714,
+          0.5,
+          0.4,
+          0.25,
+          0.3333333333333333,
+          0.5,
+          1.0,
+          1.0
+        ],
+        "recall": [
+          1.0,
+          1.0,
+          0.75,
+          0.5,
+          0.25,
+          0.25,
+          0.25,
+          0.25,
+          0.0
+        ]
+      },
+      "sample_count": 8
+    },
+    "qsvm": {
+      "auroc": 0.5,
+      "auprc": 0.6428571428571428,
+      "accuracy": 0.375,
+      "precision": 0.3333333333333333,
+      "recall": 0.25,
+      "f1": 0.2857142857142857,
+      "sensitivity": 0.25,
+      "specificity": 0.5,
+      "spec_at_95sens": 0.25,
+      "confusion_matrix": {
+        "tn": 2,
+        "fp": 2,
+        "fn": 3,
+        "tp": 1
+      },
+      "roc_curve": {
+        "fpr": [
+          0.0,
+          0.0,
+          0.5,
+          0.5,
+          0.75,
+          0.75,
+          1.0
+        ],
+        "tpr": [
+          0.0,
+          0.25,
+          0.25,
+          0.5,
+          0.5,
+          1.0,
+          1.0
+        ]
+      },
+      "pr_curve": {
+        "precision": [
+          0.5,
+          0.5714285714285714,
+          0.5,
+          0.4,
+          0.5,
+          0.3333333333333333,
+          1.0,
+          1.0
+        ],
+        "recall": [
+          1.0,
+          1.0,
+          0.75,
+          0.5,
+          0.5,
+          0.25,
+          0.25,
+          0.0
+        ]
+      },
+      "sample_count": 8
+    },
+    "pqk": {
+      "auroc": 0.3125,
+      "auprc": 0.4583333333333333,
+      "accuracy": 0.5,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "sensitivity": 0.0,
+      "specificity": 1.0,
+      "spec_at_95sens": 0.0,
+      "confusion_matrix": {
+        "tn": 4,
+        "fp": 0,
+        "fn": 4,
+        "tp": 0
+      },
+      "roc_curve": {
+        "fpr": [
+          0.0,
+          0.25,
+          0.5,
+          0.5,
+          0.75,
+          0.75,
+          1.0,
+          1.0
+        ],
+        "tpr": [
+          0.0,
+          0.0,
+          0.0,
+          0.5,
+          0.5,
+          0.75,
+          0.75,
+          1.0
+        ]
+      },
+      "pr_curve": {
+        "precision": [
+          0.5,
+          0.42857142857142855,
+          0.5,
+          0.4,
+          0.5,
+          0.3333333333333333,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "recall": [
+          1.0,
+          0.75,
+          0.75,
+          0.5,
+          0.5,
+          0.25,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "sample_count": 8
+    },
+    "vqc": {
+      "auroc": 0.625,
+      "auprc": 0.7678571428571428,
+      "accuracy": 0.375,
+      "precision": 0.4,
+      "recall": 0.5,
+      "f1": 0.4444444444444444,
+      "sensitivity": 0.5,
+      "specificity": 0.25,
+      "spec_at_95sens": 0.25,
+      "confusion_matrix": {
+        "tn": 1,
+        "fp": 3,
+        "fn": 2,
+        "tp": 2
+      },
+      "roc_curve": {
+        "fpr": [
+          0.0,
+          0.0,
+          0.0,
+          0.75,
+          0.75,
+          1.0
+        ],
+        "tpr": [
+          0.0,
+          0.25,
+          0.5,
+          0.5,
+          1.0,
+          1.0
+        ]
+      },
+      "pr_curve": {
+        "precision": [
+          0.5,
+          0.5714285714285714,
+          0.5,
+          0.4,
+          0.5,
+          0.6666666666666666,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "recall": [
+          1.0,
+          1.0,
+          0.75,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.25,
+          0.0
+        ]
+      },
+      "sample_count": 8
+    }
+  },
+  "train_rows_used": 32,
+  "train_rows_capped": false,
+  "classical_rows_used": 32,
+  "quantum_kernel_evals_train": 528,
+  "quantum_kernel_evals_test": 256,
+  "quantum_kernel_evals_total": 784,
+  "integrity_warnings": [],
+  "circuit": {
+    "drawing": "0: \u2500\u256dAngleEmbedding(M0)\u2500\u256dIsingZZ(0.00)\u2500\u2524 \u256dProbs\n1: \u2500\u2570AngleEmbedding(M0)\u2500\u2570IsingZZ(0.00)\u2500\u2524 \u2570Probs\n\nM0 = \n[0. 0.]",
+    "depth": 2,
+    "num_operations": 2,
+    "execution_type": "SIMULATED EXECUTION",
+    "execution_error": null,
+    "ansatz": "AngleEmbedding + IsingZZ",
+    "n_qubits": 2
+  },
+  "readiness": {
+    "overall": 71.2,
+    "subscores": {
+      "small_data_fit": 60.0,
+      "compressibility": 71.2,
+      "quantum_geometry": 70.0,
+      "class_balance": 96.1
+    },
+    "verdict_text": "Good candidate for quantum benchmarking; advantage unlikely, but the classical floor is guaranteed either way."
+  },
+  "uncertainty": {
+    "logreg": {
+      "conformal_qhat": 0.5794533865482148,
+      "coverage_target": 0.9,
+      "prediction_sets": [
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "status": "available"
+    },
+    "svm_rbf": {
+      "conformal_qhat": 0.5333870698624121,
+      "coverage_target": 0.9,
+      "prediction_sets": [
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "status": "available"
+    },
+    "random_forest": {
+      "conformal_qhat": 0.9266666666666666,
+      "coverage_target": 0.9,
+      "prediction_sets": [
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "status": "available"
+    },
+    "qsvm": {
+      "conformal_qhat": 0.5228838638029358,
+      "coverage_target": 0.9,
+      "prediction_sets": [
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "status": "available"
+    },
+    "pqk": {
+      "conformal_qhat": 0.5293680225225509,
+      "coverage_target": 0.9,
+      "prediction_sets": [
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "status": "available"
+    },
+    "vqc": {
+      "conformal_qhat": 0.5871289624294509,
+      "coverage_target": 0.9,
+      "prediction_sets": [
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "status": "available"
+    }
+  },
+  "explainability": {
+    "type": "Surrogate Classical Explainability",
+    "model_used": "Matched Random Forest on PCA latent space",
+    "disclaimer": "These are surrogate attributions on the compressed latent space \u2014 not direct quantum circuit attributions.",
+    "n_components": 2,
+    "status": "available",
+    "top_components": [
+      {
+        "component": "PC2",
+        "importance": 0.22620391312029636,
+        "original_features": [
+          {
+            "name": "num__feat_2",
+            "weight": 0.7113450423445431
+          },
+          {
+            "name": "num__feat_4",
+            "weight": 0.6744499204989416
+          },
+          {
+            "name": "num__feat_1",
+            "weight": 0.13123620365912175
+          },
+          {
+            "name": "num__feat_0",
+            "weight": 0.12250798148904046
+          }
+        ]
+      },
+      {
+        "component": "PC1",
+        "importance": 0.16067755900656686,
+        "original_features": [
+          {
+            "name": "num__feat_1",
+            "weight": 0.6667623481584714
+          },
+          {
+            "name": "num__feat_0",
+            "weight": 0.64176960727589
+          },
+          {
+            "name": "num__feat_3",
+            "weight": 0.3717482810062579
+          },
+          {
+            "name": "num__feat_2",
+            "weight": 0.0713707432459176
+          }
+        ]
+      }
+    ]
+  },
+  "verdict": {
+    "best_model": "vqc",
+    "best_quantum": "vqc",
+    "quantum_won": true,
+    "quantum_vs_best_classical": 0.1875,
+    "full_feature_floor_auroc": 0.4375,
+    "full_feature_floor_has_integrity_warning": false
+  }
+}

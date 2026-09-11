@@ -1,0 +1,71 @@
+{
+  "name": "custom",
+  "title": "Uploaded dataset",
+  "n_features": 12,
+  "feature_names": [
+    "age",
+    "anaemia",
+    "creatinine_phosphokinase",
+    "diabetes",
+    "ejection_fraction",
+    "high_blood_pressure",
+    "platelets",
+    "serum_creatinine",
+    "serum_sodium",
+    "sex",
+    "smoking",
+    "time"
+  ],
+  "numerical_features": [
+    "age",
+    "anaemia",
+    "creatinine_phosphokinase",
+    "diabetes",
+    "ejection_fraction",
+    "high_blood_pressure",
+    "platelets",
+    "serum_creatinine",
+    "serum_sodium",
+    "sex",
+    "smoking",
+    "time"
+  ],
+  "categorical_features": [],
+  "positive_class": "1",
+  "profile": {
+    "rows": 299,
+    "columns": 13,
+    "target_column": "DEATH_EVENT",
+    "classes": 2,
+    "missing_pct": 0.0,
+    "missing_per_col": {
+      "age": 0,
+      "anaemia": 0,
+      "creatinine_phosphokinase": 0,
+      "diabetes": 0,
+      "ejection_fraction": 0,
+      "high_blood_pressure": 0,
+      "platelets": 0,
+      "serum_creatinine": 0,
+      "serum_sodium": 0,
+      "sex": 0,
+      "smoking": 0,
+      "time": 0
+    },
+    "duplicates": 0,
+    "numerical_features": 12,
+    "categorical_features": 0,
+    "constant_features": 0,
+    "identifier_columns": 0,
+    "leakage_risk_columns": [],
+    "class_counts": {
+      "0": 203,
+      "1": 96
+    },
+    "imbalance_ratio": 2.1145833333333335,
+    "computational_cost_estimate": "Moderate",
+    "modality": "TABULAR",
+    "modality_confidence": "98%",
+    "modality_reasoning": "12 structured columns with mixed numerical/categorical features."
+  }
+}

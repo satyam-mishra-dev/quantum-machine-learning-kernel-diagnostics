@@ -1,0 +1,72 @@
+{
+  "budget": {
+    "n_qubits": 4,
+    "method": "select",
+    "explained_variance": null,
+    "cv_auroc": 0.7088,
+    "runner_up_cv_auroc": 0.7086
+  },
+  "scout": {
+    "n_scouted": 100,
+    "kta_quantum": 0.4710011363467901,
+    "kta_classical": 0.5528059364661939,
+    "g_asym": 15.584152616305106,
+    "g_huang_naive_reg": 4.263630119427279,
+    "g_threshold_sqrt_n": 10.0,
+    "g_ratio": 1.5584152616305107,
+    "verdict": "advantage_possible",
+    "quantum_worth_trying": true
+  },
+  "heldout": {
+    "logreg": {
+      "auroc": 0.6814001021972407,
+      "accuracy": 0.7375886524822695,
+      "spec_at_95sens": 0.16504854368932043
+    },
+    "svm_rbf": {
+      "auroc": 0.635666836995401,
+      "accuracy": 0.7375886524822695,
+      "spec_at_95sens": 0.06796116504854366
+    },
+    "random_forest": {
+      "auroc": 0.7089933571793562,
+      "accuracy": 0.7588652482269503,
+      "spec_at_95sens": 0.35922330097087374
+    },
+    "qsvm": {
+      "auroc": 0.6581502299437916,
+      "accuracy": 0.7375886524822695,
+      "spec_at_95sens": 0.08737864077669899
+    },
+    "pqk": {
+      "auroc": 0.700817577925396,
+      "accuracy": 0.7446808510638298,
+      "spec_at_95sens": 0.18446601941747576
+    },
+    "vqc": {
+      "auroc": 0.5,
+      "accuracy": 0.2695035460992908,
+      "spec_at_95sens": 0.0
+    }
+  },
+  "train_rows_used": 561,
+  "train_rows_capped": false,
+  "circuit_drawing": "0: \u2500\u256dAngleEmbedding(M0)\u2500\u256dIsingZZ(0.00)\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2524 \u256dProbs\n1: \u2500\u251cAngleEmbedding(M0)\u2500\u2570IsingZZ(0.00)\u2500\u256dIsingZZ(0.00)\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2524 \u251cProbs\n2: \u2500\u251cAngleEmbedding(M0)\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2570IsingZZ(0.00)\u2500\u256dIsingZZ(0.00)\u2500\u2524 \u251cProbs\n3: \u2500\u2570AngleEmbedding(M0)\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2570IsingZZ(0.00)\u2500\u2524 \u2570Probs\n\nM0 = \n[0. 0. 0. 0.]",
+  "readiness": {
+    "overall": 90.5,
+    "subscores": {
+      "small_data_fit": 100.0,
+      "compressibility": 83.4,
+      "quantum_geometry": 100.0,
+      "class_balance": 64.1
+    },
+    "verdict_text": "Good candidate: the scout sees kernel structure a classical kernel may miss \u2014 worth benchmarking on real hardware."
+  },
+  "verdict": {
+    "best_model": "random_forest",
+    "best_quantum": "pqk",
+    "quantum_won": false,
+    "quantum_vs_best_classical": -0.0082,
+    "qsvm_vs_best_classical": -0.0508
+  }
+}
