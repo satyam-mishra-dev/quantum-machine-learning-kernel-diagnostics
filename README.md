@@ -1,5 +1,7 @@
 # QuantumFloor
 
+[![CI](https://github.com/satyam-mishra-dev/quantum-machine-learning-kernel-diagnostics/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/satyam-mishra-dev/quantum-machine-learning-kernel-diagnostics/actions/workflows/ci.yml)
+
 Hybrid quantum-classical ML platform for early disease detection (SIH 2026).
 Product name: **QuantumFloor**; the Python package and repo keep the working
 name `qnidaan` (Q-Nidaan).
