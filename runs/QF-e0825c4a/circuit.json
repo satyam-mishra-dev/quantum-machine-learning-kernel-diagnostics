@@ -1,9 +1,0 @@
-{
-  "drawing": "0: \u2500\u2500AngleEmbedding(M0)\u2500\u2524  Probs\n\nM0 = \n[0.]",
-  "depth": 1,
-  "num_operations": 1,
-  "execution_type": "SIMULATED EXECUTION",
-  "execution_error": null,
-  "ansatz": "AngleEmbedding + IsingZZ",
-  "n_qubits": 1
-}
