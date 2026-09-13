@@ -5,6 +5,7 @@ If d <= budget we just scale; otherwise PCA down to the budget. Output is
 scaled to [0, pi] so it can feed rotation gates directly.
 """
 from dataclasses import dataclass, field
+from functools import partial
 
 import numpy as np
 from sklearn.decomposition import PCA
@@ -14,6 +15,11 @@ from sklearn.preprocessing import MinMaxScaler, StandardScaler, OneHotEncoder
 from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
 import pandas as pd
+
+# mutual_info_classif adds random jitter to continuous features; without a
+# seed `select` picks a different feature set every run and runs/*.json
+# cannot regenerate. Measured: 6 harness runs on Cleveland, 6 feature sets.
+_mutual_info = partial(mutual_info_classif, random_state=0)
 
 
 @dataclass
@@ -70,7 +76,6 @@ def fit_budget(X_train, budget: int = 8, y=None,
     else:
         base_steps = []
 
-    # Calculate approximate d
     d = X_train.shape[1]
     
     if d <= budget and not (is_df and len(X_train.select_dtypes(exclude='number').columns) > 0):
@@ -83,7 +88,7 @@ def fit_budget(X_train, budget: int = 8, y=None,
         if y is None:
             raise ValueError('method="select" requires y')
         pipe = Pipeline(base_steps + [
-            ("select", SelectKBest(mutual_info_classif, k=budget)),
+            ("select", SelectKBest(_mutual_info, k=budget)),
             ("scale", MinMaxScaler((0, np.pi))),
         ])
         pipe.fit(X_train, y)
