@@ -29,19 +29,18 @@ def test_preprocessing_does_not_fit_on_test():
     Zte = plan.transform(Xte)
     assert Zte.shape == (len(Xte), 4)
     
-def test_test_set_isolation():
-    Xtr, Xte, ytr, yte, meta = load_split("pima")
-    
-    # Make a dummy change to test data and ensure it doesn't affect the training pipeline
-    Xte_fake = Xte.copy()
-    Xte_fake[:] = 9999.0
-    
-    plan1 = fit_budget_auto(Xtr, ytr, budget=4)
-    Ztr1 = plan1.transform(Xtr)
-    
-    # We just logically confirm that Xte was never seen by fit_budget_auto
-    # The test passes because fit_budget_auto takes (X_train, y_train) exclusively.
-    assert True
+def test_budgeter_is_deterministic():
+    # mutual_info_classif jitters continuous features; without a seed the
+    # "select" plan picked a different feature set every harness run and
+    # runs/*.json could not regenerate.
+    Xtr, _, ytr, _, _ = load_split("cleveland")
+    picks = {tuple(fit_budget(Xtr, 4, y=ytr, method="select").selected_features)
+             for _ in range(3)}
+    assert len(picks) == 1, f"select is non-deterministic: {picks}"
+
+    a = fit_budget_auto(Xtr, ytr, budget=4)
+    b = fit_budget_auto(Xtr, ytr, budget=4)
+    assert (a.method, a.cv_auroc, a.runner_up_cv_auroc) == (b.method, b.cv_auroc, b.runner_up_cv_auroc)
 
 def test_target_leakage_check():
     # If a feature is perfectly correlated with the target but only in the test set,
@@ -56,10 +55,9 @@ def test_target_leakage_check():
     # Make feature 9 perfectly correlated with target in TEST set only
     Xte[:, 9] = yte * 100.0
     
-    plan = fit_budget_auto(Xtr, ytr, budget=2)
-    # Feature 9 should not be selected because it has no correlation in train set
-    if plan.method == 'select':
-        assert 9 not in plan.selected_features, "Feature 9 leaked into selection!"
+    plan = fit_budget(Xtr, 2, y=ytr, method="select")
+    # Feature 9 must not be selected: it carries no signal in the train set
+    assert 9 not in plan.selected_features, "Feature 9 leaked into selection!"
 
 if __name__ == "__main__":
     pytest.main(["-v", __file__])

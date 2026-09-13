@@ -16,6 +16,7 @@ def run_adapter_worker(job_id: str, X, y, meta, budget):
         from qnidaan.quantum import PQK, QSVM, VQC, make_kernel
         from qnidaan.scout import scout
         from qnidaan.readiness import readiness
+        from qnidaan.report import ALPHA, fit_conformal, prediction_set
         
         # ─── DUPLICATE DETECTION & SPLITTING ──────────────────────────────────────────────
         import pandas as pd
@@ -45,10 +46,14 @@ def run_adapter_worker(job_id: str, X, y, meta, budget):
             n_conflicts = (target_conflicts > 1).sum()
             
             if n_conflicts > 0:
-                msg = f"⚠ INTEGRITY ERROR: {n_conflicts} duplicate feature groups have conflicting targets. Dataset is ambiguous."
-                update_job(job_id, status="FAILED", stage="FAILED", error=msg, log_message=msg)
-                return False
-                
+                # Identical features with different outcomes is normal in
+                # clinical data (label noise), not a reason to refuse the run.
+                # It caps achievable AUROC; report it, keep going.
+                integrity_warnings.append(
+                    f"{int(n_conflicts)} duplicate feature groups carry conflicting "
+                    f"targets (label noise) — no model can separate them; AUROC ceiling < 1."
+                )
+
             integrity_warnings.append(
                 f"Duplicate rows detected: {dup_count}. "
                 f"GroupShuffleSplit applied to {n_unique} unique groups to guarantee 0 cross-split leakage."
@@ -124,6 +129,13 @@ def run_adapter_worker(job_id: str, X, y, meta, budget):
             ytr_q = ytr
             update_job(job_id, log_message=f"Dataset small enough: all {len(Xtr_pre)} training rows used for both classical and quantum.")
             
+        # Calibration rows are carved out BEFORE the budgeter is fit (same as
+        # harness.py): the selector uses y, so conformal stays exchangeable only
+        # if it never saw the calibration rows.
+        Xtr_q, Xcal_q, ytr_q, ycal_q = train_test_split(
+            Xtr_q, ytr_q, test_size=0.2, random_state=42, stratify=ytr_q
+        )
+
         # ─── BUDGETING ────────────────────────────────────────────────────────
         update_job(job_id, stage="BUDGETING", log_message=f"Selecting optimal {budget}-qubit budget via PCA/SelectKBest")
         plan = fit_budget_auto(Xtr_q, ytr_q, budget)
@@ -133,7 +145,8 @@ def run_adapter_worker(job_id: str, X, y, meta, budget):
             f"via {plan.method} ({comp_ratio:.1f}x compression)"
         ))
         
-        Ztr_q, Zte = plan.transform(Xtr_q), plan.transform(Xte_pre)
+        Ztr_q, Zcal_q, Zte = (plan.transform(Xtr_q), plan.transform(Xcal_q),
+                              plan.transform(Xte_pre))
         kernel = make_kernel(plan.n_qubits)
         
         # ─── SCOUTING ─────────────────────────────────────────────────────────
@@ -222,10 +235,7 @@ def run_adapter_worker(job_id: str, X, y, meta, budget):
             "vqc": VQC(n_qubits=plan.n_qubits, epochs=10),
         }
         
-        # Calibration split from quantum subset
-        Ztr_train, Ztr_calib, ytr_train, ytr_calib = train_test_split(
-            Ztr_q, ytr_q, test_size=0.2, random_state=42, stratify=ytr_q
-        )
+        Ztr_train, ytr_train, Ztr_calib, ytr_calib = Ztr_q, ytr_q, Zcal_q, ycal_q
         out["uncertainty"] = {}
         
         import time
@@ -330,17 +340,14 @@ def run_adapter_worker(job_id: str, X, y, meta, budget):
                 
             out["heldout"][mname] = evaluate(m, Zte, yte)
             
-            # Conformal Prediction (Uncertainty)
+            # Split conformal — same code path as the flagship harness
             try:
-                calib_probs = m.predict_proba(Ztr_calib)
-                test_probs = m.predict_proba(Zte)
-                scores = 1.0 - calib_probs[np.arange(len(ytr_calib)), ytr_calib]
-                qhat = np.quantile(scores, min(1.0, (len(ytr_calib) + 1) / len(ytr_calib) * 0.90))
-                prediction_sets = (test_probs >= (1.0 - qhat)).astype(int).tolist()
+                qhat = fit_conformal(m, Ztr_calib, ytr_calib)
+                out["heldout"][mname]["conformal_qhat"] = qhat
                 out["uncertainty"][mname] = {
-                    "conformal_qhat": float(qhat),
-                    "coverage_target": 0.90,
-                    "prediction_sets": prediction_sets,
+                    "conformal_qhat": qhat,
+                    "coverage_target": 1 - ALPHA,
+                    "prediction_sets": prediction_set(m, Zte, qhat),
                     "status": "available"
                 }
             except Exception as e:
@@ -385,16 +392,23 @@ def run_adapter_worker(job_id: str, X, y, meta, budget):
             
             top_components = []
             for i in top_idx:
-                comp = {"component": f"PC{i + 1}", "importance": float(mean_abs_shap[i])}
+                # feature names in the post-ColumnTransformer space (num, then one-hot)
+                try:
+                    feature_names_out = list(preprocessor.get_feature_names_out())
+                except Exception:
+                    feature_names_out = meta["feature_names"]
+                if plan.method == "select" and plan.selected_features:
+                    # a selected column IS an original clinical feature — name it
+                    fi = plan.selected_features[i]
+                    label = feature_names_out[fi] if fi < len(feature_names_out) else f"Feature {fi}"
+                elif plan.method == "scale":
+                    label = feature_names_out[i] if i < len(feature_names_out) else f"Feature {i}"
+                else:
+                    label = f"PC{i + 1}"
+                comp = {"component": label, "importance": float(mean_abs_shap[i])}
                 if plan.method == "pca" and "pca" in plan.pipeline.named_steps:
                     pca_weights = plan.pipeline.named_steps["pca"].components_[i]
                     top_feats = np.argsort(np.abs(pca_weights))[::-1][:4]
-                    
-                    try:
-                        feature_names_out = preprocessor.get_feature_names_out()
-                    except Exception:
-                        feature_names_out = meta["feature_names"]
-                        
                     comp["original_features"] = [
                         {"name": feature_names_out[fi] if fi < len(feature_names_out) else f"Feature {fi}", 
                          "weight": float(np.abs(pca_weights[fi]))}

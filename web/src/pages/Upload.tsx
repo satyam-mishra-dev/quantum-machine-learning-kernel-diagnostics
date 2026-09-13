@@ -3,7 +3,6 @@ import clsx from 'clsx';
 import gsap from 'gsap';
 import { api, MODEL_LABELS, isQuantum, type JobStatus } from '../lib/api';
 import { Badge, Button, Card, ColdStartNote, ErrorState, Eyebrow, KV, PageTitle, ReadinessBreakdown } from '../components/ui';
-import { CircuitLab } from '../components/CircuitLab';
 
 /** Shipped in web/public/samples/. Every one is verified to parse through
     qnidaan.datasets.load_csv with the target column named here. Cleveland and
@@ -408,16 +407,10 @@ export function Upload(): ReactNode {
               <ErrorState>Pipeline failed: {job.error}</ErrorState>
             </div>
           )}
-          
-          {job?.result?.circuit && job?.status !== 'FAILED' && (
-             <div className="mt-4">
-                 <CircuitLab circuit={job.result.circuit} stage={job.stage} telemetry={logs[0]?.telemetry} />
-             </div>
-          )}
         </Card>
       )}
 
-      {job?.status === 'COMPLETED' && job.result && <ResearchConsole result={job.result} jobId={jobId} profile={job.profile} />}
+      {job?.status === 'COMPLETED' && job.result && <ResearchConsole result={job.result} jobId={jobId} profile={profile} />}
     </div>
   );
 }

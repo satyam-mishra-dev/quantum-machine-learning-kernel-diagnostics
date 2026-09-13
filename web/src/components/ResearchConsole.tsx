@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react';
-import { Badge, Button, Eyebrow, KV } from './ui';
+import { Badge, Button, Eyebrow, KV, ReadinessBreakdown } from './ui';
 import { CircuitLab } from './CircuitLab';
 import { MODEL_LABELS, isQuantum } from '../lib/api';
 import {
@@ -32,6 +32,15 @@ export function ResearchConsole({ result, jobId: propJobId, profile }: { result:
         {budget && <>{' '}· {budget.n_qubits} qubits ({budget.method})</>}
         {scout && <>{' '}· scout: {scout.quantum_worth_trying ? 'quantum worth trying' : 'no quantum edge expected'}</>}
       </p>
+
+      {result.readiness && (
+        <div className="mt-5 border-t border-rule pt-5">
+          <Eyebrow>Quantum readiness</Eyebrow>
+          <div className="mt-3 max-w-sm">
+            <ReadinessBreakdown r={result.readiness} />
+          </div>
+        </div>
+      )}
       
       {/* Dataset Integrity Card */}
       <div className="mt-8 bg-[#0d1117] border border-rule p-5 rounded-sm">
@@ -194,7 +203,7 @@ export function ResearchConsole({ result, jobId: propJobId, profile }: { result:
               {Object.entries(safeHeldout).map(([m, e]: [string, any]) => (
                 <tr key={m} className="border-b border-rule/30 hover:bg-white/5 transition-colors">
                   <td className="py-2 pr-4 font-medium text-ink">{MODEL_LABELS[m] ?? m}</td>
-                  <td className="py-2 px-3">{isQuantum(m) ? <Badge tone="quantum">Quantum</Badge> : <Badge tone="base">Classical</Badge>}</td>
+                  <td className="py-2 px-3">{isQuantum(m) ? <Badge tone="quantum">Quantum</Badge> : <Badge tone="neutral">Classical</Badge>}</td>
                   <td className="py-2 px-3 text-right font-mono text-ink-60">{e.error ? '-' : (e.auroc?.toFixed(4) ?? 'N/A')}</td>
                   <td className="py-2 px-3 text-right font-mono text-ink-60">{e.error ? '-' : (e.auprc?.toFixed(4) ?? 'N/A')}</td>
                   <td className="py-2 px-3 text-right font-mono text-ink-60">{e.error ? '-' : (e.accuracy?.toFixed(4) ?? 'N/A')}</td>
@@ -270,40 +279,33 @@ export function ResearchConsole({ result, jobId: propJobId, profile }: { result:
       );
     }
     
-    const data = {
-      labels: explainability.top_components.map((c: any) => c.component),
-      datasets: [
-        {
-          label: 'Mean |SHAP| Value',
-          data: explainability.top_components.map((c: any) => c.importance),
-          backgroundColor: '#444',
-        }
-      ]
-    };
+    const shapData = explainability.top_components.map((c: any) => ({ name: c.component, importance: c.importance }));
 
     return (
       <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
         <Eyebrow>{explainability.type}</Eyebrow>
         
         <div className="mt-4 p-4 bg-[#0d1117] border border-quantum/30 rounded-sm">
-          <h4 className="font-semibold text-quantum-wash mb-2">Why PC1 / PC2?</h4>
+          <h4 className="font-semibold text-quantum-wash mb-2">{budget?.method === 'pca' ? 'Why PC1 / PC2?' : 'Why these features?'}</h4>
           <p className="text-sm text-ink-60 leading-relaxed">
-            Quantum execution uses a PCA-compressed representation of the original dataset. SHAP is calculated on the matched classical surrogate model operating in this same compressed space. Therefore, PC1 and PC2 represent latent feature directions rather than original clinical features.
+            {budget?.method === 'pca'
+              ? 'Quantum execution uses a PCA-compressed representation of the original dataset. SHAP is calculated on the matched classical surrogate model operating in this same compressed space, so PC1, PC2… are latent directions; the original features that load onto each are listed on the right.'
+              : 'The Qubit Budgeter chose mutual-information feature selection for this dataset, so each qubit encodes one original clinical feature. SHAP is calculated on the matched classical surrogate over those same features.'}
           </p>
         </div>
 
         <div className="mt-6 flex flex-col lg:flex-row gap-6">
           <div className="bg-paper p-4 border border-rule rounded-sm h-[300px] w-full lg:w-1/2">
-             <Bar 
-               options={{
-                 responsive: true,
-                 maintainAspectRatio: false,
-                 indexAxis: 'y',
-                 plugins: { legend: { display: false }, title: { display: true, text: 'Top Feature Attributions (PCA space)', color: '#fff' } },
-                 scales: { x: { grid: { color: '#333' }, ticks: { color: '#bbb' } }, y: { grid: { display: false }, ticks: { color: '#bbb' } } }
-               }} 
-               data={data} 
-             />
+             <h4 className="text-center text-[#fff] text-sm font-bold mb-2">Top Feature Attributions (compressed space)</h4>
+             <ResponsiveContainer width="100%" height="90%">
+               <BarChart data={shapData} layout="vertical" margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
+                 <CartesianGrid strokeDasharray="3 3" stroke="#333" horizontal={false} />
+                 <XAxis type="number" stroke="#bbb" tick={{ fill: '#bbb', fontSize: 12 }} />
+                 <YAxis type="category" dataKey="name" stroke="#bbb" tick={{ fill: '#bbb', fontSize: 12 }} width={50} />
+                 <RechartsTooltip contentStyle={{ backgroundColor: '#111', borderColor: '#333' }} itemStyle={{ color: '#fff' }} />
+                 <Bar dataKey="importance" fill="#444" radius={[0, 2, 2, 0]} />
+               </BarChart>
+             </ResponsiveContainer>
           </div>
           
           <div className="w-full lg:w-1/2 space-y-4">

@@ -94,7 +94,7 @@ export type Verdict = {
 };
 
 export type JobStatus = {
-  status: 'running' | 'done' | 'error';
+  status: 'QUEUED' | 'RUNNING' | 'COMPLETED' | 'FAILED'; // mirrors qnidaan/db.py
   stage?: string;
   error?: string;
   dataset?: { title: string; n_features: number };
