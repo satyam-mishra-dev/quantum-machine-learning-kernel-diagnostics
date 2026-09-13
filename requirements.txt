@@ -16,3 +16,6 @@ scikit-learn==1.9.0
 shap==0.52.0
 torch==2.13.0
 uvicorn==0.52.4
+fpdf2==2.8.8
+opencv-python-headless==4.14.0.94
+pytest==9.1.1

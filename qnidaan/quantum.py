@@ -9,12 +9,43 @@ from sklearn.svm import SVC
 
 SEED = 42
 
+import os
+import pennylane as qml
+
+class QuantumBackendManager:
+    _instance = None
+    
+    @classmethod
+    def get_info(cls, n_qubits=2):
+        if not cls._instance:
+            cls._instance = cls(n_qubits)
+        cls._instance.get_device()
+        return cls._instance.execution_mode, cls._instance.error
+
+    def __init__(self, n_qubits):
+        self.n_qubits = n_qubits
+        self.token = os.environ.get("IBM_QUANTUM_TOKEN") or os.environ.get("QISKIT_IBM_TOKEN")
+        self.instance = os.environ.get("QISKIT_IBM_INSTANCE", "ibm_brisbane")
+        self.execution_mode = "SIMULATED EXECUTION"
+        self.error = None
+        self.dev = None
+
+    def get_device(self):
+        if self.dev: return self.dev
+        
+        # Hardware execution via QPU has been removed to prevent PennyLane 0.45.1 incompatibilities
+        # and limit execution to fast local simulation.
+                
+        try:
+            self.dev = qml.device("lightning.qubit", wires=self.n_qubits)
+        except Exception:
+            self.dev = qml.device("default.qubit", wires=self.n_qubits)
+        return self.dev
 
 def _device(n_qubits):
-    try:
-        return qml.device("lightning.qubit", wires=n_qubits)
-    except Exception:  # lightning missing on some platforms
-        return qml.device("default.qubit", wires=n_qubits)
+    manager = QuantumBackendManager(n_qubits)
+    QuantumBackendManager._instance = manager
+    return manager.get_device()
 
 
 # ---------------------------------------------------------------- QSVM ------
@@ -47,15 +78,46 @@ def make_kernel(n_qubits, reps=1):
     return kernel
 
 
-def kernel_matrix(kernel, A, B=None, symmetric=False):
+import time
+
+def kernel_matrix(kernel, A, B=None, symmetric=False, callback=None, callback_interval=10):
+    """Compute kernel matrix with progress reporting.
+    
+    callback_interval: report every N evaluations (default 10 for responsive UI)
+    For training (symmetric=True): evaluates n*(n+1)//2 pairs
+    For test (symmetric=False): evaluates len(A)*len(B) pairs
+    """
     B = A if B is None else B
-    K = np.zeros((len(A), len(B)))
-    for i, a in enumerate(A):
-        start = i if symmetric else 0
-        for j in range(start, len(B)):
-            K[i, j] = kernel(a, B[j])
+    n_a, n_b = len(A), len(B)
+    K = np.zeros((n_a, n_b))
+    
     if symmetric:
-        K = K + K.T - np.diag(np.diag(K))
+        total_evals = (n_a * (n_a + 1)) // 2
+    else:
+        total_evals = n_a * n_b
+    
+    completed = 0
+    start_time = time.time()
+    for i, a in enumerate(A):
+        start_j = i if symmetric else 0
+        for j in range(start_j, n_b):
+            val = kernel(a, B[j])
+            K[i, j] = val
+            if symmetric and i != j:
+                K[j, i] = val  # fill symmetric immediately
+            completed += 1
+            
+            if callback and (completed % callback_interval == 0 or completed == total_evals):
+                elapsed = time.time() - start_time
+                rate = completed / elapsed if elapsed > 0 else 0
+                eta = (total_evals - completed) / rate if rate > 0 else None
+                callback(completed, total_evals, elapsed, rate, eta)
+                
+    if symmetric:
+        # Ensure diagonal is correct (self-similarity = 1.0 for fidelity kernels)
+        # Already filled symmetric pairs above; just fix diagonal if needed
+        pass
+        
     return K
 
 
@@ -70,7 +132,8 @@ class QSVM:
 
     def __getstate__(self):  # qnode closures don't pickle; rebuild on load
         state = self.__dict__.copy()
-        state.pop("kernel")
+        state.pop("kernel", None)
+        state.pop("kernel_callback", None)
         return state
 
     def __setstate__(self, state):
@@ -79,13 +142,30 @@ class QSVM:
 
     def fit(self, X, y):
         self.X_train_ = np.asarray(X)
-        K = kernel_matrix(self.kernel, self.X_train_, symmetric=True)
+        cb = getattr(self, 'kernel_callback', None)
+        n = len(self.X_train_)
+        total_train = (n * (n + 1)) // 2
+        # Wrap callback to prefix training phase
+        train_cb = None
+        if cb:
+            def train_cb(completed, total, elapsed, rate, eta):
+                cb(completed, total_train, elapsed, rate, eta, phase="TRAIN_KERNEL")
+        K = kernel_matrix(self.kernel, self.X_train_, symmetric=True, callback=train_cb, callback_interval=5)
         self.K_train_ = K
         self.svc.fit(K, y)
         return self
 
     def predict_proba(self, X):
-        K = kernel_matrix(self.kernel, np.asarray(X), self.X_train_)
+        cb = getattr(self, 'kernel_callback', None)
+        X = np.asarray(X)
+        n_test = len(X)
+        n_train = len(self.X_train_)
+        total_test = n_test * n_train
+        test_cb = None
+        if cb:
+            def test_cb(completed, total, elapsed, rate, eta):
+                cb(completed, total_test, elapsed, rate, eta, phase="TEST_KERNEL")
+        K = kernel_matrix(self.kernel, X, self.X_train_, callback=test_cb, callback_interval=5)
         return self.svc.predict_proba(K)
 
     def predict(self, X):
@@ -121,21 +201,32 @@ class PQK:
 
     def __getstate__(self):  # qnode closures don't pickle; rebuild on load
         state = self.__dict__.copy()
-        state.pop("circuit")
+        state.pop("circuit", None)
+        state.pop("kernel_callback", None)
         return state
 
     def __setstate__(self, state):
         self.__dict__.update(state)
         self._build_circuit()
 
-    def _features(self, X):
-        return np.array([self.circuit(x) for x in np.asarray(X)],
-                        dtype=float)
+    def _features(self, X, callback=None):
+        rows = np.asarray(X)
+        result = []
+        start_time = time.time()
+        for idx, x in enumerate(rows):
+            result.append(self.circuit(x))
+            if callback and ((idx + 1) % 5 == 0 or idx + 1 == len(rows)):
+                elapsed = time.time() - start_time
+                rate = (idx + 1) / elapsed if elapsed > 0 else 0
+                eta = (len(rows) - idx - 1) / rate if rate > 0 else None
+                callback(idx + 1, len(rows), elapsed, rate, eta)
+        return np.array(result, dtype=float)
 
     def fit(self, X, y):
         from sklearn.model_selection import GridSearchCV
 
-        F = self._features(X)
+        cb = getattr(self, 'kernel_callback', None)
+        F = self._features(X, callback=cb)
         gs = GridSearchCV(
             SVC(kernel="rbf", C=self.C, probability=True, random_state=SEED),
             {"gamma": list(self.GAMMAS)}, cv=3,
@@ -143,6 +234,7 @@ class PQK:
         gs.fit(F, y)
         self.svc = gs.best_estimator_
         self.gamma_ = gs.best_params_["gamma"]
+        self.X_train_features_ = F
         return self
 
     def predict_proba(self, X):
@@ -178,7 +270,8 @@ class VQC:
 
     def __getstate__(self):
         state = self.__dict__.copy()
-        state.pop("circuit")
+        state.pop("circuit", None)
+        state.pop("epoch_callback", None)
         return state
 
     def __setstate__(self, state):
@@ -188,7 +281,7 @@ class VQC:
     def _scores(self, weights, bias, X):
         return np.array([self.circuit(weights, x) for x in X]) + bias
 
-    def fit(self, X, y):
+    def fit(self, X, y, epoch_callback=None):
         from pennylane import numpy as pnp
 
         X, y = np.asarray(X), np.asarray(y)
@@ -205,19 +298,24 @@ class VQC:
             return pnp.mean((scores - yb) ** 2)
 
         n = len(X)
-        for _ in range(self.epochs):  # true epochs: every batch, every pass
+        for epoch in range(self.epochs):  # true epochs: every batch, every pass
             order = self.rng.permutation(n)
             for start in range(0, n, self.batch_size):
                 idx = order[start:start + self.batch_size]
                 weights, bias = opt.step(
                     lambda w, b: cost(w, b, X[idx], y_pm[idx]), weights, bias
                 )
+            if epoch_callback:
+                # evaluate full cost for logging
+                c = cost(weights, bias, X, y_pm)
+                epoch_callback(epoch + 1, self.epochs, float(c))
+                
         self.weights_, self.bias_ = weights, bias
         return self
 
     def predict_proba(self, X):
         s = self._scores(self.weights_, self.bias_, np.asarray(X))
-        p1 = np.clip((s + 1) / 2, 0, 1)  # ponytail: affine score->prob, Platt scaling if calibration matters
+        p1 = np.clip((s + 1) / 2, 0, 1)  # affine score->prob
         return np.column_stack([1 - p1, p1])
 
     def predict(self, X):

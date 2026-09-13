@@ -5,6 +5,7 @@ seed and never touched during training/model-selection.
 """
 import io
 import urllib.request
+import json
 from pathlib import Path
 
 import numpy as np
@@ -153,28 +154,343 @@ def load_split(name: str):
     return Xtr, Xte, ytr, yte, meta
 
 
-def load_csv(path_or_buf, target_column: str):
-    """Universal adapter entry point: any CSV with a binary target column."""
+def detect_modality(df: pd.DataFrame, file_ext: str = ".csv") -> dict:
+    """Modality detection logic (Step 2)."""
+    # Simple logic for now: if CSV, it's Tabular or Signal.
+    # Signal heuristic: 1D array or all numeric with standard time/freq columns
+    if file_ext == ".zip":
+        return {"modality": "IMAGE", "reasoning": "ZIP file provided, assumed image collection."}
+    
+    # Check for Tabular vs Signal
+    num_cols = df.select_dtypes(include='number').columns
+    if len(num_cols) == len(df.columns) and len(df.columns) > 50:
+        if all(str(c).isdigit() for c in df.columns) or any('hz' in str(c).lower() or 'time' in str(c).lower() for c in df.columns[:5]):
+            return {"modality": "SIGNAL", "reasoning": f"Detected {len(df.columns)} numeric columns indicating raw time-series/signal."}
+    
+    return {"modality": "TABULAR", "reasoning": f"{len(df.columns)} structured columns with mixed numerical/categorical features."}
+
+def load_csv(path_or_buf, target_column: str = "", file_name: str = "upload.csv"):
+    """Universal adapter entry point: any dataset with a target column."""
     df = pd.read_csv(path_or_buf)
+    
+    if df.empty:
+        raise ValueError("Dataset is empty.")
+        
+    original_rows = len(df)
+    original_cols = len(df.columns)
+    
+    # Target Detection
+    if not target_column:
+        candidates = []
+        for col in df.columns:
+            if df[col].nunique() == 2:
+                lower_col = col.lower()
+                if any(x in lower_col for x in ['target', 'outcome', 'label', 'disease', 'status', 'class']):
+                    candidates.insert(0, col) # Prioritize named candidates
+                else:
+                    candidates.append(col)
+        
+        if len(candidates) == 1:
+            target_column = candidates[0]
+        elif len(candidates) > 1:
+            raise ValueError(f'{{"target_ambiguous": true, "candidates": {json.dumps(candidates)}}}')
+        else:
+            raise ValueError("No binary target column automatically detected. Please specify one.")
+            
     if target_column not in df.columns:
-        raise ValueError(f"target column {target_column!r} not in CSV")
-    df = df.dropna()
+        raise ValueError(f"target column {target_column!r} not in dataset")
+
+    # Target validation: drop ONLY rows where target is missing
+    df = df.dropna(subset=[target_column])
+    target_missing = original_rows - len(df)
+    
     y_raw = df.pop(target_column)
-    classes = sorted(y_raw.unique())
+    classes = y_raw.dropna().unique()
     if len(classes) != 2:
-        raise ValueError(f"need binary target, got classes {classes}")
-    y = (y_raw == classes[1]).astype(int).to_numpy()
-    X = df.select_dtypes("number")
-    dropped = [c for c in df.columns if c not in X.columns]
-    return X.to_numpy(dtype=float), y, {
-        "name": "custom",
-        "title": "Uploaded dataset",
-        "n_features": X.shape[1],
-        "feature_names": list(X.columns),
-        "dropped_non_numeric": dropped,
-        "positive_class": str(classes[1]),
+        raise ValueError(f"Multiclass target detected ({len(classes)} classes) — current quantum benchmark supports binary classification. Please select a binary outcome.")
+    
+    class_counts = y_raw.value_counts().to_dict()
+    c_vals = list(class_counts.values())
+    imbalance_ratio = max(c_vals) / min(c_vals) if len(c_vals) == 2 and min(c_vals) > 0 else float('inf')
+    
+    classes_sorted = sorted(classes)
+    y = (y_raw == classes_sorted[1]).astype(int).to_numpy()
+    
+    # Date processing
+    datetime_cols = []
+    for col in df.columns:
+        if df[col].dtype == 'object':
+            try:
+                parsed = pd.to_datetime(df[col], format='mixed')
+                if parsed.notna().sum() > 0.8 * len(df):
+                    datetime_cols.append(col)
+                    df[f"{col}_year"] = parsed.dt.year
+                    df[f"{col}_month"] = parsed.dt.month
+                    df[f"{col}_day"] = parsed.dt.day
+                    df[f"{col}_dayofweek"] = parsed.dt.dayofweek
+            except Exception:
+                pass
+                
+    if datetime_cols:
+        df = df.drop(columns=datetime_cols)
+        
+    # Feature types and identifiers
+    num_cols = list(df.select_dtypes(include='number').columns)
+    cat_cols = list(df.select_dtypes(exclude='number').columns)
+    
+    # Missing values profiling (before dropping anything)
+    missing_total = int(df.isna().sum().sum())
+    missing_pct = (missing_total / (len(df) * len(df.columns))) * 100 if len(df) > 0 else 0
+    missing_per_col = df.isna().sum().to_dict()
+    duplicates = int(df.duplicated().sum())
+
+    constant_cols = [c for c in df.columns if df[c].nunique() <= 1]
+    
+    # Identifier detection (high cardinality categorical or monotonically increasing numerical)
+    identifiers = []
+    for c in df.columns:
+        # If nearly unique and not a float/random feature
+        if df[c].nunique() > 0.9 * len(df):
+            if c not in num_cols or df[c].is_monotonic_increasing or df[c].dtype == int:
+                identifiers.append(c)
+                
+    # Remove identifiers and constants to prevent leakage and noise
+    cols_to_drop = list(set(constant_cols + identifiers))
+    df = df.drop(columns=cols_to_drop)
+    
+    num_cols = [c for c in num_cols if c not in cols_to_drop]
+    cat_cols = [c for c in cat_cols if c not in cols_to_drop]
+    
+    # Modality
+    modality_info = detect_modality(df)
+    
+    if modality_info["modality"] == "SIGNAL":
+        signal_cols = list(df.select_dtypes(include='number').columns)
+        if len(signal_cols) > 10:
+            signals = df[signal_cols].fillna(0).to_numpy()
+            df["signal_mean"] = signals.mean(axis=1)
+            df["signal_std"] = signals.std(axis=1)
+            df["signal_max"] = signals.max(axis=1)
+            df["signal_min"] = signals.min(axis=1)
+            
+            import numpy as np
+            fft_vals = np.abs(np.fft.rfft(signals, axis=1))
+            df["fft_energy"] = np.sum(fft_vals**2, axis=1)
+            
+            for i in range(min(10, fft_vals.shape[1])):
+                df[f"fft_freq_{i}"] = fft_vals[:, i]
+                
+            df = df.drop(columns=signal_cols)
+            
+            num_cols = list(df.select_dtypes(include='number').columns)
+            cat_cols = list(df.select_dtypes(exclude='number').columns)
+    
+    # Compute Cost Estimate
+    if len(df) > 10000:
+        cost = "Extreme"
+    elif len(df) > 1000:
+        cost = "High"
+    elif len(df) > 200:
+        cost = "Moderate"
+    else:
+        cost = "Low"
+        
+    profile = {
+        "rows": original_rows,
+        "columns": original_cols,
+        "target_column": target_column,
+        "target_missing": target_missing,
+        "classes": len(classes),
+        "missing_pct": missing_pct,
+        "missing_per_col": {k: int(v) for k, v in missing_per_col.items()},
+        "duplicates": duplicates,
+        "numerical_features": len(num_cols),
+        "categorical_features": len(cat_cols),
+        "constant_features": len(constant_cols),
+        "identifier_columns": len(identifiers),
+        "leakage_risk_columns": identifiers,
+        "class_counts": {str(k): int(v) for k, v in class_counts.items()},
+        "imbalance_ratio": imbalance_ratio,
+        "computational_cost_estimate": cost,
+        "modality": modality_info["modality"],
+        "modality_reasoning": modality_info.get("reasoning", "")
     }
 
+    # Apply Modality-specific Classical Preprocessing
+    if profile["modality"] == "SIGNAL":
+        import numpy as np
+        # Extract Fourier transform features (magnitude spectrum)
+        X_num = df[num_cols].values
+        fft_vals = np.abs(np.fft.rfft(X_num, axis=1))
+        
+        # Replace the original time-series columns with the frequency components
+        df_fft = pd.DataFrame(fft_vals, columns=[f"freq_{i}" for i in range(fft_vals.shape[1])])
+        
+        # Keep categorical columns if any
+        if cat_cols:
+            df = pd.concat([df_fft, df[cat_cols].reset_index(drop=True)], axis=1)
+        else:
+            df = df_fft
+            
+        num_cols = list(df_fft.columns)
+        profile["numerical_features"] = len(num_cols)
+        profile["columns"] = df.shape[1]
+        
+    # We return the dataframe directly to preserve categorical and NA values for the pipeline
+    return df, y, {
+        "name": "custom",
+        "title": "Uploaded dataset",
+        "n_features": df.shape[1],
+        "feature_names": list(df.columns),
+        "numerical_features": num_cols,
+        "categorical_features": cat_cols,
+        "positive_class": str(classes_sorted[1]),
+        "profile": profile
+    }
+
+def load_image_benchmark(name: str):
+    """Load MedMNIST image benchmarks, flatten, and return as tabular for the hybrid pipeline."""
+    import medmnist
+    import numpy as np
+    
+    DATASETS = {
+        "pneumoniamnist": ("PneumoniaMNIST", False, "PneumoniaMNIST (MedMNIST v2)", "1=pneumonia, 0=normal"),
+        "breastmnist": ("BreastMNIST", True, "BreastMNIST (MedMNIST v2)", "1=malignant, 0=normal/benign"),
+    }
+    if name not in DATASETS:
+        raise ValueError(f"Unsupported image benchmark: {name}")
+        
+    cls_name, flip, title, conv = DATASETS[name]
+    cls = getattr(medmnist, cls_name)
+    
+    # Download and load
+    import os
+    data_dir = os.path.join(os.path.dirname(__file__), '..', 'data')
+    os.makedirs(data_dir, exist_ok=True)
+    
+    tr = cls(split="train", download=True, root=data_dir)
+    te = cls(split="test", download=True, root=data_dir)
+    
+    # Flatten images into 784 features
+    X_train = tr.imgs.reshape(len(tr.imgs), -1) / 255.0
+    y_train = tr.labels.squeeze()
+    
+    X_test = te.imgs.reshape(len(te.imgs), -1) / 255.0
+    y_test = te.labels.squeeze()
+    
+    if flip:
+        y_train = 1 - y_train
+        y_test = 1 - y_test
+        
+    X_all = np.vstack([X_train, X_test])
+    y_all = np.concatenate([y_train, y_test])
+    
+    # Create DataFrame to match unified representation
+    df = pd.DataFrame(X_all, columns=[f"px_{i}" for i in range(X_all.shape[1])])
+    
+    profile = {
+        "rows": len(df),
+        "columns": df.shape[1],
+        "target_column": "target",
+        "classes": 2,
+        "missing_pct": 0,
+        "missing_per_col": {},
+        "duplicates": 0,
+        "numerical_features": df.shape[1],
+        "categorical_features": 0,
+        "constant_features": 0,
+        "identifier_columns": 0,
+        "leakage_risk_columns": [],
+        "class_counts": {"0": int((y_all == 0).sum()), "1": int((y_all == 1).sum())},
+        "imbalance_ratio": float(max((y_all == 0).sum(), (y_all == 1).sum()) / max(1, min((y_all == 0).sum(), (y_all == 1).sum()))),
+        "computational_cost_estimate": "High",
+        "modality": "IMAGE",
+        "modality_reasoning": "Explicit benchmark dataset triggered: " + title
+    }
+    
+    return df, y_all, {
+        "name": name,
+        "title": title,
+        "n_features": df.shape[1],
+        "feature_names": list(df.columns),
+        "numerical_features": list(df.columns),
+        "categorical_features": [],
+        "positive_class": "1",
+        "profile": profile
+    }
+
+def load_zip(path_or_buf, budget: int = 8):
+    import zipfile
+    import cv2
+    import os
+    
+    # Configurable limits for demo safety
+    MAX_IMAGE_SAMPLES = 400
+    
+    with zipfile.ZipFile(path_or_buf) as z:
+        images = []
+        labels = []
+        classes = []
+        
+        for name in z.namelist():
+            if name.endswith(('.png', '.jpg', '.jpeg', '.bmp')):
+                # Prevent zip slip / path traversal
+                safe_name = os.path.normpath(name)
+                if safe_name.startswith("..") or os.path.isabs(safe_name):
+                    continue
+                    
+                parts = safe_name.replace('\\', '/').split('/')
+                # We expect dataset/class_folder/image.png or class_folder/image.png
+                # Find the parent directory of the file
+                if len(parts) >= 2:
+                    folder = parts[-2]
+                else:
+                    continue # Not in a folder
+                    
+                if folder not in classes:
+                    classes.append(folder)
+                    
+                if len(images) >= MAX_IMAGE_SAMPLES:
+                    continue # Bound memory
+                
+                try:
+                    with z.open(name) as f:
+                        img_bytes = np.frombuffer(f.read(5_000_000), np.uint8) # 5MB limit per image
+                        img = cv2.imdecode(img_bytes, cv2.IMREAD_GRAYSCALE)
+                        if img is not None:
+                            img = cv2.resize(img, (28, 28))
+                            images.append(img.flatten())
+                            labels.append(classes.index(folder))
+                except Exception:
+                    pass
+                
+        if not images:
+            raise ValueError("No valid images found in subdirectories of the ZIP.")
+            
+        if len(classes) != 2:
+            raise ValueError(f"Need exactly 2 classes (folders) for binary classification, found {len(classes)}.")
+            
+        X = np.array(images)
+        y = np.array(labels)
+        
+        meta = {
+            "n_samples": len(y),
+            "n_features": X.shape[1],
+            "numerical_features": list(range(X.shape[1])),
+            "categorical_features": [],
+            "profile": {
+                "rows": len(y),
+                "columns": X.shape[1],
+                "classes": len(classes),
+                "missing_pct": 0,
+                "modality": "IMAGE",
+                "modality_reasoning": "ZIP file with image subdirectories.",
+                "computational_cost_estimate": "High"
+            }
+        }
+        
+        df = pd.DataFrame(X, columns=[f"pixel_{i}" for i in range(X.shape[1])])
+        return df, y, meta
 
 if __name__ == "__main__":
     for name in LOADERS:

@@ -5,12 +5,21 @@ If d <= budget we just scale; otherwise PCA down to the budget. Output is
 scaled to [0, pi] so it can feed rotation gates directly.
 """
 from dataclasses import dataclass, field
+from functools import partial
 
 import numpy as np
 from sklearn.decomposition import PCA
 from sklearn.feature_selection import SelectKBest, mutual_info_classif
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import MinMaxScaler, StandardScaler
+from sklearn.preprocessing import MinMaxScaler, StandardScaler, OneHotEncoder
+from sklearn.compose import ColumnTransformer
+from sklearn.impute import SimpleImputer
+import pandas as pd
+
+# mutual_info_classif adds random jitter to continuous features; without a
+# seed `select` picks a different feature set every run and runs/*.json
+# cannot regenerate. Measured: 6 harness runs on Cleveland, 6 feature sets.
+_mutual_info = partial(mutual_info_classif, random_state=0)
 
 
 @dataclass
@@ -28,25 +37,67 @@ class BudgetPlan:
         return self.pipeline.transform(X)
 
 
+def _build_preprocessor(X_train):
+    """Build a ColumnTransformer for preprocessing if X_train is a DataFrame."""
+    if not isinstance(X_train, pd.DataFrame):
+        return None
+        
+    num_cols = list(X_train.select_dtypes(include='number').columns)
+    cat_cols = list(X_train.select_dtypes(exclude='number').columns)
+    
+    transformers = []
+    if num_cols:
+        num_pipe = Pipeline([
+            ("imputer", SimpleImputer(strategy="median"))
+        ])
+        transformers.append(("num", num_pipe, num_cols))
+        
+    if cat_cols:
+        cat_pipe = Pipeline([
+            ("imputer", SimpleImputer(strategy="constant", fill_value="missing")),
+            ("ohe", OneHotEncoder(handle_unknown="ignore", sparse_output=False))
+        ])
+        transformers.append(("cat", cat_pipe, cat_cols))
+        
+    if not transformers:
+        return None
+        
+    return ColumnTransformer(transformers, remainder="passthrough")
+
+
 def fit_budget(X_train, budget: int = 8, y=None,
                method: str = "pca") -> BudgetPlan:
+    is_df = isinstance(X_train, pd.DataFrame)
+    
+    preprocessor = _build_preprocessor(X_train)
+    
+    if preprocessor:
+        base_steps = [("pre", preprocessor)]
+    else:
+        base_steps = []
+
     d = X_train.shape[1]
-    if d <= budget:
-        pipe = Pipeline([("scale", MinMaxScaler((0, np.pi)))])
+    
+    if d <= budget and not (is_df and len(X_train.select_dtypes(exclude='number').columns) > 0):
+        # fast path for small numeric datasets
+        pipe = Pipeline(base_steps + [("scale", MinMaxScaler((0, np.pi)))])
         pipe.fit(X_train)
         return BudgetPlan(d, d, "scale", None, pipe)
-    if method == "select":  # mutual-information top-k, keeps raw features
+        
+    if method == "select":  # mutual-information top-k
         if y is None:
             raise ValueError('method="select" requires y')
-        pipe = Pipeline([
-            ("select", SelectKBest(mutual_info_classif, k=budget)),
+        pipe = Pipeline(base_steps + [
+            ("select", SelectKBest(_mutual_info, k=budget)),
             ("scale", MinMaxScaler((0, np.pi))),
         ])
         pipe.fit(X_train, y)
         idx = pipe.named_steps["select"].get_support(indices=True)
         return BudgetPlan(d, budget, "select", None, pipe,
                           [int(i) for i in idx])
-    pipe = Pipeline([
+                          
+    # method == "pca"
+    pipe = Pipeline(base_steps + [
         ("std", StandardScaler()),
         ("pca", PCA(n_components=budget, random_state=0)),
         ("scale", MinMaxScaler((0, np.pi))),
@@ -66,14 +117,20 @@ def fit_budget_auto(X_train, y, budget: int = 8) -> BudgetPlan:
         return fit_budget(X_train, budget)
     from sklearn.linear_model import LogisticRegression
     from sklearn.model_selection import StratifiedKFold, cross_val_score
+    from sklearn.pipeline import make_pipeline
+    from sklearn.base import clone
 
     cv = StratifiedKFold(5, shuffle=True, random_state=0)
     plans, scores = {}, {}
     for method in ("pca", "select"):
         plans[method] = fit_budget(X_train, budget, y=y, method=method)
+        # Create an unfitted pipeline that includes the preprocessing steps and the classifier
+        # to ensure that feature selection/PCA only learns from the training folds during CV.
+        eval_pipe = make_pipeline(*[clone(step) for name, step in plans[method].pipeline.steps])
+        eval_pipe.steps.append(("clf", LogisticRegression(max_iter=2000)))
+        
         scores[method] = float(np.mean(cross_val_score(
-            LogisticRegression(max_iter=2000),
-            plans[method].transform(X_train), y,
+            eval_pipe, X_train, y,
             cv=cv, scoring="roc_auc")))
     winner = "select" if scores["select"] > scores["pca"] else "pca"
     plan = plans[winner]

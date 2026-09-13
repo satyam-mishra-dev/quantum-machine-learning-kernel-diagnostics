@@ -25,3 +25,11 @@ dist/
 # sample CSVs shipped to the frontend for the upload demo
 !web/public/samples/*.csv
 web/tsconfig.tsbuildinfo
+jobs.db
+scratch/
+*.db
+scratch_load.py
+# per-upload job artifacts written by qnidaan/worker.py — never receipts
+runs/QF-*/
+runs/QuantumFloor_*.zip
+models/QF-*/
