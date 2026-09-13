@@ -87,16 +87,14 @@ Open the CuMiDa card from the dashboard.
 
 > "The problem statement names genomics, so we benchmarked genomics.
 > CuMiDa Renal GSE53757 — clear-cell renal carcinoma vs normal tissue,
-> 54,675 gene-expression probes per patient. The Budgeter mutual-info
-> selects 8 genes → 8 qubits. Held out: PQK 0.919 vs logistic regression
-> 0.924 on the same 8 genes — parity, and the Scout called it: 'classical
-> will match', correct again — 6 for 6 across every dataset in our published runs. The honest floor: a
-> random forest on all 54,675 genes gets 0.936 — our 8-qubit model gives
-> up less than 2 AUROC points to the full genome. And a finding we didn't
-> expect: the full-54k logreg and SVM floors (0.881–0.914) actually score
-> *below* the best compressed models (0.919–0.924) — with only 114
-> training samples, compression is regularization. It helps the classical
-> twins too."
+> 54,675 gene-expression probes per patient. The Budgeter CV-tests
+> mutual-info selection against PCA and picks PCA → 8 qubits. Held out:
+> PQK 0.876 vs SVM-RBF 0.905 on the same 8 components — classical ahead
+> by 3 points, and the Scout called it: 'classical will match', correct
+> again — 6 for 6 across every dataset in our published runs. The honest
+> floor: a random forest on all 54,675 genes gets 0.936 — our 8-qubit
+> model gives up 6 AUROC points to the full genome, at 1/6800th of the
+> input width. We publish the loss."
 
 ### Stop 6 — Patient check
 
@@ -180,15 +178,15 @@ Parkinson's): worst case 2 minutes from upload to verdict.
 
 **Q: The PS names genomics — where is it?**
 A: Benchmarked, in `runs/cumida.json`. CuMiDa Renal GSE53757: 54,675
-gene-expression probes → 8 mutual-info-selected genes → 8 qubits. Held
-out: PQK 0.919 vs logreg 0.924 on the same 8 genes, full-genome random
-forest floor 0.936 — parity at 1/6800th of the input width, under 2 AUROC
-points off the full genome. The Scout said "classical will match"
-(g-ratio 0.33) and was right — 6 for 6 in published runs. Bonus finding: the
-full-54k logreg/SVM floors (0.881–0.914) score below the best compressed
-models (0.919–0.924) — at n=114, compression is regularization. All three
-PS-named data types — EHR-style tabular, medical imaging, genomics — now
-have measured benchmarks, plus regression.
+gene-expression probes → 8 principal components → 8 qubits (the Budgeter
+CV-picked PCA over mutual-info selection, 0.906 vs 0.877). Held out: PQK
+0.876 vs SVM-RBF 0.905 on the same 8 components, full-genome random
+forest floor 0.936 — classical wins by 3 points and the full genome by
+6. The Scout said "classical will match" (g-ratio 0.40) and was right —
+6 for 6 in published runs. All three PS-named data types — EHR-style
+tabular, medical imaging, genomics — now have measured benchmarks, plus
+regression. (An earlier 0.919/0.924 figure came from an unseeded
+feature-selection draw and did not reproduce; the selector is now seeded.)
 
 **Q: The PS says classification/regression — do you do regression?**
 A: Yes, measured. Diabetes disease-progression (442 patients, continuous

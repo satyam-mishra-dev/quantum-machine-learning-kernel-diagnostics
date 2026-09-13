@@ -24,7 +24,7 @@ model (the never-ship-worse baseline).
 | Pima diabetes | 0.802 (VQC) | 0.806 (SVM-RBF) | 0.823 (logreg) |
 | Quantum-native synthetic | 0.972 (QSVM) | 0.743 (random forest) | 0.766 (random forest) |
 | PneumoniaMNIST X-rays | 0.939 (hybrid QNN) | 0.925 (matched CNN) | — (image track) |
-| CuMiDa renal genomics (54,675 genes → 8 qubits) | 0.919 (PQK) | 0.924 (logreg, 8 genes) | 0.936 (random forest, all genes) |
+| CuMiDa renal genomics (54,675 genes → 8 qubits) | 0.876 (PQK) | 0.905 (SVM-RBF, 8 PCs) | 0.936 (random forest, all genes) |
 | Diabetes progression (regression, R²) | 0.464 (VQR) | 0.472 (random forest) | 0.454 (ridge, full) |
 
 Advantage Scout: the "classical_will_match" verdict is 6/6 (every dataset in current runs/) against

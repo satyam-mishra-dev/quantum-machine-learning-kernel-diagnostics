@@ -42,18 +42,18 @@
   "budget": {
     "n_qubits": 4,
     "method": "pca",
-    "explained_variance": 0.7984862154498064,
+    "explained_variance": 0.7984862154498065,
     "cv_auroc": 0.991,
     "runner_up_cv_auroc": 0.9852
   },
   "scout": {
     "n_scouted": 100,
-    "kta_quantum": 0.15693196329917858,
-    "kta_classical": 0.11904542986176497,
-    "g_asym": 2.964522097873917,
-    "g_huang_naive_reg": 4.136579239240203,
+    "kta_quantum": 0.15693196329917863,
+    "kta_classical": 0.11904542986176506,
+    "g_asym": 2.9645220978610634,
+    "g_huang_naive_reg": 4.136579239240208,
     "g_threshold_sqrt_n": 10.0,
-    "g_ratio": 0.29645220978739173,
+    "g_ratio": 0.2964522097861063,
     "verdict": "classical_will_match",
     "quantum_worth_trying": false
   },
@@ -232,8 +232,8 @@
         ]
       },
       "sample_count": 114,
-      "train_seconds": 0.02,
-      "conformal_qhat": 0.32618451804315507
+      "train_seconds": 0.01,
+      "conformal_qhat": 0.32618451804315485
     },
     "svm_rbf": {
       "auroc": 0.996031746031746,
@@ -396,8 +396,8 @@
         ]
       },
       "sample_count": 114,
-      "train_seconds": 0.04,
-      "conformal_qhat": 0.2667221254336555
+      "train_seconds": 0.01,
+      "conformal_qhat": 0.2667221254336559
     },
     "random_forest": {
       "auroc": 0.9945436507936508,
@@ -608,7 +608,7 @@
         ]
       },
       "sample_count": 114,
-      "train_seconds": 0.64,
+      "train_seconds": 0.15,
       "conformal_qhat": 0.33333333333333337
     },
     "qsvm": {
@@ -776,8 +776,8 @@
         ]
       },
       "sample_count": 114,
-      "train_seconds": 302.69,
-      "conformal_qhat": 0.1484748822575389
+      "train_seconds": 50.01,
+      "conformal_qhat": 0.148437348909917
     },
     "pqk": {
       "auroc": 0.996031746031746,
@@ -940,8 +940,8 @@
         ]
       },
       "sample_count": 114,
-      "train_seconds": 1.5,
-      "conformal_qhat": 0.12459689493631887
+      "train_seconds": 0.28,
+      "conformal_qhat": 0.12459075155254773
     },
     "vqc": {
       "auroc": 0.9897486772486773,
@@ -1108,8 +1108,8 @@
         ]
       },
       "sample_count": 114,
-      "train_seconds": 134.47,
-      "conformal_qhat": 0.513343472957817
+      "train_seconds": 31.06,
+      "conformal_qhat": 0.5133434729578172
     },
     "ensemble_q+c": {
       "auroc": 0.9963624338624338,
@@ -1272,7 +1272,7 @@
         ]
       },
       "sample_count": 114,
-      "conformal_qhat": 0.292249721516751
+      "conformal_qhat": 0.2922309548429399
     },
     "logreg_full": {
       "auroc": 0.996031746031746,
@@ -1435,7 +1435,7 @@
         ]
       },
       "sample_count": 114,
-      "train_seconds": 0.02,
+      "train_seconds": 0.01,
       "full_features": true
     },
     "svm_rbf_full": {
@@ -1599,7 +1599,7 @@
         ]
       },
       "sample_count": 114,
-      "train_seconds": 0.05,
+      "train_seconds": 0.01,
       "full_features": true
     },
     "random_forest_full": {
@@ -1787,7 +1787,7 @@
         ]
       },
       "sample_count": 114,
-      "train_seconds": 0.89,
+      "train_seconds": 0.21,
       "full_features": true
     }
   },
