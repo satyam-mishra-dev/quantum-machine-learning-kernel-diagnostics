@@ -80,7 +80,7 @@ export function Landing(): ReactNode {
       <section ref={hero} className="relative overflow-hidden py-14 sm:py-20">
         <Orbits />
         <div className="max-w-2xl">
-          <div className="hero-item eyebrow">SIH 2026 · Hybrid quantum–classical ML</div>
+          <div className="hero-item eyebrow">Hybrid quantum–classical ML</div>
           <h1 className="hero-item mt-3 font-serif text-[42px] leading-[1.05] font-semibold text-ink sm:text-[56px]">
             <span className="q-gradient-text">QuantumFloor</span>
           </h1>

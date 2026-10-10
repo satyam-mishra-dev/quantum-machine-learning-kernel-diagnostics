@@ -1,8 +1,15 @@
 # QuantumFloor
 
 [![CI](https://github.com/satyam-mishra-dev/quantum-machine-learning-kernel-diagnostics/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/satyam-mishra-dev/quantum-machine-learning-kernel-diagnostics/actions/workflows/ci.yml)
+[![Live demo](https://img.shields.io/badge/demo-live-success?logo=vercel)](https://quantum-machine-learning-kernel.vercel.app/)
+![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)
+![Qiskit](https://img.shields.io/badge/Qiskit-IBM%20Quantum-6929C4?logo=qiskit&logoColor=white)
+![IBM QPU](https://img.shields.io/badge/QPU-156--qubit%20Heron-052FAD?logo=ibm&logoColor=white)
+![FastAPI](https://img.shields.io/badge/API-FastAPI-009688?logo=fastapi&logoColor=white)
+![React](https://img.shields.io/badge/web-React%20%2B%20Vite-61DAFB?logo=react&logoColor=black)
+[![License](https://img.shields.io/github/license/satyam-mishra-dev/quantum-machine-learning-kernel-diagnostics)](LICENSE)
 
-Hybrid quantum-classical ML platform for early disease detection (SIH 2026).
+Hybrid quantum-classical ML platform for early disease detection.
 Product name: **QuantumFloor**; the Python package and repo keep the working
 name `qnidaan` (Q-Nidaan).
 
@@ -56,7 +63,7 @@ All numbers regenerate from `python -m qnidaan.harness` and land in
 | D7 | Functional platform | React frontend (`web/`: Dashboard, DatasetDetail, PatientCheck, Upload), FastAPI backend (`qnidaan/app.py`), Docker + Render deployment (`render.yaml`). |
 | D8 | Biomedical datasets (public/open) | WDBC, Cleveland, Pima, quantum-native synthetic, PneumoniaMNIST, BreastMNIST benchmarked in `runs/`; ILPD, heart failure, Parkinson's validated live via the adapter; CuMiDa renal genomics (54,675 genes) benchmarked in `runs/cumida.json`; diabetes-progression regression in `runs/regression_diabetes.json`. |
 | D9 | Near-term hardware compatibility | Real-QPU inference receipt: ibm_marrakesh, job `da8724bsq5js73bko9eg`, 4 qubits / 1024 shots, DD + twirling + TREX mitigation, 4/4 sim-hardware agreement (`runs/hardware_cleveland.json`). |
-| D10 | Comprehensive documentation | `README.md`, `COMPLIANCE.md` (line-by-line PS audit), `DEMO.md` (3-min runbook + judge Q&A), `IDEAS.md` (epoch log, negative results included). |
+| D10 | Comprehensive documentation | `README.md`, `DEMO.md` (3-min runbook + Q&A). |
 
 ## What we deliberately do not build
 

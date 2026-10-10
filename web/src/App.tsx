@@ -63,7 +63,7 @@ function Shell({ children }: { children: ReactNode }): ReactNode {
       <footer className="border-t border-rule">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2 px-4 py-4 font-mono text-[11px] text-ink-45">
           <span>QuantumFloor · honest quantum ML for early disease detection</span>
-          <span>Built for Smart India Hackathon 2026 · runs on IBM Quantum hardware</span>
+          <span>Runs on IBM Quantum hardware</span>
         </div>
       </footer>
     </div>
